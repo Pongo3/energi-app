@@ -30,75 +30,147 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-# CSS Styling
+# CSS Styling - Avskalad, professionell design utan emojis
 st.markdown("""
     <style>
-    .main { background-color: #f8fafc; }
+    /* Bakgrund */
+    .main { background-color: #f1f5f9; }
     
+    /* Header Banner */
     .main-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 2.2rem 2rem;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
+        padding: 2.5rem 2.2rem;
         border-radius: 16px;
         color: #ffffff;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+        box-shadow: 0 12px 28px -5px rgba(15, 23, 42, 0.2);
+        border-bottom: 4px solid #3b82f6;
     }
     
-    .main-header h1 { color: #ffffff !important; font-weight: 800; font-size: 2.2rem; margin-bottom: 0.4rem; }
-    .main-header p { color: #94a3b8; font-size: 1.05rem; margin: 0; }
+    .main-header h1 { 
+        color: #ffffff !important; 
+        font-weight: 800; 
+        font-size: 2.3rem; 
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
+    }
     
+    .main-header p { 
+        color: #cbd5e1; 
+        font-size: 1.05rem; 
+        margin: 0;
+        font-weight: 500;
+    }
+    
+    /* Metric Cards */
     .metric-card {
-        background-color: #ffffff;
+        background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        border-radius: 14px;
+        padding: 1.4rem 1.6rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         margin-bottom: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     
-    .metric-label { font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
-    .metric-value { font-size: 1.8rem; font-weight: 800; color: #0f172a; }
-    .metric-subtext { font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 0.25rem; }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    }
+    
+    .metric-label { 
+        font-size: 0.82rem; 
+        font-weight: 700; 
+        color: #64748b; 
+        text-transform: uppercase; 
+        letter-spacing: 0.06em; 
+        margin-bottom: 0.4rem; 
+    }
+    
+    .metric-value { 
+        font-size: 1.9rem; 
+        font-weight: 800; 
+        color: #0f172a; 
+    }
+    
+    .metric-subtext { 
+        font-size: 0.82rem; 
+        color: #64748b; 
+        font-weight: 600; 
+        margin-top: 0.3rem; 
+    }
 
-    .stTabs [data-baseweb="tab-list"] { gap: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; }
-    .stTabs [data-baseweb="tab"] { height: 48px; border-radius: 8px; padding: 0px 20px; font-weight: 600; color: #64748b; }
-    .stTabs [aria-selected="true"] { background-color: #3b82f6 !important; color: #ffffff !important; }
+    /* Stora stilrena Flikknappar */
+    .stTabs [data-baseweb="tab-list"] { 
+        gap: 12px; 
+        border-bottom: 3px solid #cbd5e1; 
+        padding-bottom: 8px; 
+    }
 
+    .stTabs [data-baseweb="tab"] { 
+        height: 54px; 
+        border-radius: 10px; 
+        padding: 0px 24px; 
+        font-weight: 700; 
+        font-size: 1.05rem;
+        color: #475569; 
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+
+    .stTabs [aria-selected="true"] { 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; 
+        color: #ffffff !important; 
+        border: none !important;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    /* Informationsrutor */
     .info-box {
         background-color: #eff6ff;
-        border-left: 4px solid #3b82f6;
-        padding: 1rem 1.25rem;
-        border-radius: 0 8px 8px 0;
+        border-left: 5px solid #2563eb;
+        padding: 1.1rem 1.3rem;
+        border-radius: 0 10px 10px 0;
         margin: 1.5rem 0;
         color: #1e40af;
         font-size: 0.95rem;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
     }
 
     .disclaimer-box {
-        background-color: #f8fafc;
+        background-color: #ffffff;
         border: 1px solid #cbd5e1;
-        border-left: 4px solid #64748b;
-        padding: 1.25rem;
-        border-radius: 8px;
+        border-left: 5px solid #64748b;
+        padding: 1.4rem;
+        border-radius: 10px;
         margin-top: 2rem;
         font-size: 0.88rem;
         color: #334155;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
-    .disclaimer-text { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+    .disclaimer-text { 
+        font-size: 0.82rem; 
+        color: #94a3b8; 
+        text-align: center; 
+        margin-top: 3.5rem; 
+        padding-top: 1.2rem; 
+        border-top: 1px solid #e2e8f0; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # Huvud-banner
 st.markdown("""
     <div class="main-header">
-        <h1>⚡ EnergyIQ Platform</h1>
-        <p>Smart energianalys, klickbar kalkylatorkarta över Sverige, ekonomi- & CO₂-analys.</p>
+        <h1>EnergyIQ Platform</h1>
+        <p>Digital energianalys, interaktiv elområdeskarta, ekonomi- & CO₂-kalkylatorer.</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Navigation via 4 Flikar
-tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
+# Navigation via 4 Flikar utan emojis
+tab1, tab2, tab3, tab4 = st.tabs(["Sverigekarta", "Stadsanalys", "Ekonomi & Payback", "CO₂ & Klimatnytta"])
 
 today = datetime.now()
 
@@ -115,8 +187,8 @@ def hamta_zon_data(zon_kod):
 # FLIK 1: SVERIGEKARTA MED REGIONSGRÄNSER
 # ==========================================
 with tab1:
-    st.markdown("### 🗺️ Interaktiv Elpriskarta över Sveriges Elområden")
-    st.write("👉 **Klicka eller för musen över regionerna** för att se priser och städer per elområde.")
+    st.markdown("### Interaktiv Elpriskarta över Sveriges Elområden")
+    st.write("Klicka eller för muspekaren över regionerna för att se aktuella priser och ingående städer per elområde.")
 
     zon_stats = {}
     for z_kod in ["SE1", "SE2", "SE3", "SE4"]:
@@ -131,31 +203,28 @@ with tab1:
             zon_stats[z_kod] = {"snitt": snitt, "nu": nu_pris, "max": max_p, "min": min_p}
 
     if zon_stats:
-        # KPI-kort högst upp
         c1, c2, c3, c4 = st.columns(4)
         meddelanden = [
             ("SE1 Norrbotten", "SE1", c1, "#3b82f6"),
             ("SE2 Sundsvall", "SE2", c2, "#10b981"),
-            ("SE3 Sthlm/Gbg", "SE3", c3, "#f59e0b"),
-            ("SE4 Malmö/Syd", "SE4", c4, "#ef4444")
+            ("SE3 Sthlm / Gbg", "SE3", c3, "#f59e0b"),
+            ("SE4 Malmö / Syd", "SE4", c4, "#ef4444")
         ]
         
         for titel, z_kod, col, farg in meddelanden:
             with col:
                 st.markdown(f"""
-                    <div class="metric-card" style="border-top: 5px solid {farg};">
+                    <div class="metric-card" style="border-top: 6px solid {farg};">
                         <div class="metric-label">{titel}</div>
                         <div class="metric-value">{zon_stats[z_kod]['snitt']:.2f} kr</div>
-                        <div class="metric-subtext">Just nu: {zon_stats[z_kod]['nu']:.2f} kr/kWh</div>
+                        <div class="metric-subtext">Just nu: <span style="color:{farg}; font-weight:700;">{zon_stats[z_kod]['nu']:.2f} kr/kWh</span></div>
                     </div>
                 """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Skapa Folium-karta centrerad över Sverige
         m = folium.Map(location=[62.5, 16.5], zoom_start=5.0, tiles="cartodbpositron")
 
-        # Koordinatgränser för Sveriges fyra elområdesregioner
         REGION_POLYGONER = {
             "SE1": {
                 "farg": "#3b82f6",
@@ -183,7 +252,6 @@ with tab1:
             }
         }
 
-        # Rita ut färgade regionytor på kartan
         for z_kod, reg in REGION_POLYGONER.items():
             stats = zon_stats[z_kod]
             popup_html = f"""
@@ -205,7 +273,7 @@ with tab1:
                 fill_color=reg["farg"],
                 fill_opacity=0.45,
                 popup=folium.Popup(popup_html, max_width=250),
-                tooltip=f"⚡ {reg['namn']} — Medelpris: {stats['snitt']:.2f} kr/kWh (Klicka för detaljer)"
+                tooltip=f"{reg['namn']} — Medelpris: {stats['snitt']:.2f} kr/kWh"
             ).add_to(m)
 
         st_folium(m, width="100%", height=540)
@@ -217,11 +285,11 @@ with tab1:
 # FLIK 2: STADSANALYS
 # ==========================================
 with tab2:
-    st.markdown("### 📊 Dagsaktuella Timpriser per Stad/Kommun")
+    st.markdown("### Dagsaktuella Timpriser per Stad / Kommun")
     col_sel1, col_sel2 = st.columns(2)
     with col_sel1:
         valdv_stad = st.selectbox(
-            "📍 Välj din Stad / Kommun:", 
+            "Välj Stad / Kommun:", 
             options=sorted(list(STAD_TILL_ELOMRADE.keys())),
             index=sorted(list(STAD_TILL_ELOMRADE.keys())).index("Stockholm")
         )
@@ -229,7 +297,7 @@ with tab2:
 
     with col_sel2:
         st.write("")
-        st.info(f"📍 **{valdv_stad}** tillhör elområde **{zon}**")
+        st.info(f"**{valdv_stad}** tillhör elområde **{zon}**")
 
     data = hamta_zon_data(zon)
     if data:
@@ -243,14 +311,14 @@ with tab2:
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.markdown(f'<div class="metric-card"><div class="metric-label">Medelpris ({valdv_stad})</div><div class="metric-value">{snitt_pris:.2f} kr</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card" style="border-top: 5px solid #2563eb;"><div class="metric-label">Medelpris ({valdv_stad})</div><div class="metric-value">{snitt_pris:.2f} kr</div></div>', unsafe_allow_html=True)
         with c2:
-            st.markdown(f'<div class="metric-card"><div class="metric-label">Högsta Timpris</div><div class="metric-value" style="color: #ef4444;">{max_pris:.2f} kr</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card" style="border-top: 5px solid #ef4444;"><div class="metric-label">Högsta Timpris</div><div class="metric-value" style="color: #ef4444;">{max_pris:.2f} kr</div></div>', unsafe_allow_html=True)
         with c3:
-            st.markdown(f'<div class="metric-card"><div class="metric-label">Lägsta Timpris</div><div class="metric-value" style="color: #10b981;">{min_pris:.2f} kr</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Lägsta Timpris</div><div class="metric-value" style="color: #10b981;">{min_pris:.2f} kr</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader(f"📈 Prisvariation i {valdv_stad} idag")
+        st.subheader(f"Prisvariation i {valdv_stad} idag")
         chart_data = df.set_index("Timme")[["SEK_per_kWh"]]
         st.line_chart(chart_data, height=350, use_container_width=True)
 
@@ -258,7 +326,7 @@ with tab2:
 # FLIK 3: EKONOMI & PAYBACK
 # ==========================================
 with tab3:
-    st.markdown("### ☀️ Investeringskalkylator (Solceller & Batterilagring)")
+    st.markdown("### Investeringskalkylator (Solceller & Batterilagring)")
     col_in1, col_in2 = st.columns(2)
     with col_in1:
         effekt_kw = st.number_input("Installerad effekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_ekonomi")
@@ -290,16 +358,16 @@ with tab3:
     st.markdown("---")
     r1, r2, r3, r4 = st.columns(4)
     with r1:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Årlig Produktion</div><div class="metric-value">{produktion_ar:,.0f}</div><div class="metric-subtext">kWh / år</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #2563eb;"><div class="metric-label">Årlig Produktion</div><div class="metric-value">{produktion_ar:,.0f}</div><div class="metric-subtext">kWh / år</div></div>', unsafe_allow_html=True)
     with r2:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Årlig Besparing</div><div class="metric-value" style="color: #10b981;">{total_besparing_ar:,.0f} kr</div><div class="metric-subtext">per år</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Årlig Besparing</div><div class="metric-value" style="color: #10b981;">{total_besparing_ar:,.0f} kr</div><div class="metric-subtext">per år</div></div>', unsafe_allow_html=True)
     with r3:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Total Investering</div><div class="metric-value">{total_investering:,.0f} kr</div><div class="metric-subtext">efter avdrag</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #64748b;"><div class="metric-label">Total Investering</div><div class="metric-value">{total_investering:,.0f} kr</div><div class="metric-subtext">efter avdrag</div></div>', unsafe_allow_html=True)
     with r4:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Payback-tid</div><div class="metric-value" style="color: #3b82f6;">{payback_ar:.1f} år</div><div class="metric-subtext">Återbetalningstid</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Payback-tid</div><div class="metric-value" style="color: #3b82f6;">{payback_ar:.1f} år</div><div class="metric-subtext">Återbetalningstid</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("📉 Ackumulerat Kassaflöde över 15 år")
+    st.subheader("Ackumulerat Kassaflöde över 15 år")
     years = list(range(0, 16))
     cashflow = [-total_investering + (yr * total_besparing_ar) for yr in years]
     df_cf = pd.DataFrame({"Kassaflöde (kr)": cashflow}, index=years)
@@ -309,7 +377,7 @@ with tab3:
 # FLIK 4: CO2 OCH KLIMATNYTTA
 # ==========================================
 with tab4:
-    st.markdown("### 🌱 Klimatberäkning & Utsläppsminskning (CO₂e)")
+    st.markdown("### Klimatberäkning & Utsläppsminskning (CO₂e)")
     c_co1, c_co2 = st.columns(2)
     with c_co1:
         effekt_kw_co2 = st.number_input("Installerad solcellseffekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_co2")
@@ -339,28 +407,28 @@ with tab4:
     antal_trad = co2_sparad_total_ton * 50
 
     st.markdown("---")
-    st.markdown("### 📊 Uppskattad Klimatnytta")
+    st.markdown("### Uppskattad Klimatnytta")
 
     k1, k2, k3 = st.columns(3)
     with k1:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Årlig CO₂-Inbesparing</div><div class="metric-value" style="color: #10b981;">{co2_sparad_ar_ton:.2f} ton</div><div class="metric-subtext">CO₂e per år</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Årlig CO₂-Inbesparing</div><div class="metric-value" style="color: #10b981;">{co2_sparad_ar_ton:.2f} ton</div><div class="metric-subtext">CO₂e per år</div></div>', unsafe_allow_html=True)
     with k2:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Total CO₂-Minskning ({anlaggning_livslangd} år)</div><div class="metric-value" style="color: #10b981;">{co2_sparad_total_ton:.1f} ton</div><div class="metric-subtext">nettoinbesparing</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Total CO₂-Minskning ({anlaggning_livslangd} år)</div><div class="metric-value" style="color: #10b981;">{co2_sparad_total_ton:.1f} ton</div><div class="metric-subtext">nettoinbesparing</div></div>', unsafe_allow_html=True)
     with k3:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Klimatskuld Betald efter</div><div class="metric-value" style="color: #3b82f6;">1.8 år</div><div class="metric-subtext">Energetisk återbetalningstid</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Klimatskuld Betald efter</div><div class="metric-value" style="color: #3b82f6;">1.8 år</div><div class="metric-subtext">Energetisk återbetalningstid</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### 🚗 Vad motsvarar koldioxidminskningen?")
+    st.markdown("#### Vad motsvarar koldioxidminskningen?")
     
     e1, e2 = st.columns(2)
     with e1:
-        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;">🚗 <b>Motsvarar Bensinbil:</b> ca <b>{bensin_mil:,.0f} mil</b> i körtsträcka med en normal bensinbil över {anlaggning_livslangd} år.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;"><b>Motsvarar Bensinbil:</b> ca <b>{bensin_mil:,.0f} mil</b> i körsträcka med en normal bensinbil över {anlaggning_livslangd} år.</div>', unsafe_allow_html=True)
     with e2:
-        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;">🌲 <b>Motsvarar Trädplantering:</b> ca <b>{antal_trad:,.0f} växande träd</b> som binder koldioxid i 10 år.</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;"><b>Motsvarar Trädplantering:</b> ca <b>{antal_trad:,.0f} växande träd</b> som binder koldioxid i 10 år.</div>', unsafe_allow_html=True)
 
     st.markdown("""
         <div class="disclaimer-box">
-            <b>📋 Metod, Avgränsning & LCA-Disclaimer:</b><br>
+            <b>Metod, Avgränsning & LCA-Disclaimer:</b><br>
             • <b>Vad som ingår i kalkylen:</b> Kalkylen baseras på en schabloniserad Livscykelanalys (LCA) där solcellernas tillverkning beräknas generera <b>~40 g CO₂e/kWh</b> under sin livslängd.<br>
             • <b>Vad som INTE ingår:</b> Specifik transportsträcka från tillverkningsland, utsläpp kopplade till montering på plats, växelriktares utbyte samt sluthantering/återvinning.<br>
             • <i>Kalkylen är indikativ och utformad för att ge ett pedagogiskt beslutsunderlag.</i>
@@ -368,13 +436,14 @@ with tab4:
     """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("⚖️ CO₂-utsläpp per kWh för olika energislag (g CO₂e/kWh)")
+    st.subheader("CO₂-utsläpp per kWh för olika Energikällor (g CO₂e/kWh)")
+    
     df_co2_comp = pd.DataFrame({
-        "Energislag": ["Kolkraft", "Naturgas", "Solceller (Tillverkning)", "Vattenkraft", "Kärnkraft"],
+        "Energikälla": ["Kolkraft", "Naturgas", "Solceller (Tillverkning)", "Vattenkraft", "Kärnkraft"],
         "Gram CO2 per kWh": [820, 490, 40, 24, 12]
-    }).set_index("Energislag")
+    }).set_index("Energikälla")
 
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.8 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.1 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
