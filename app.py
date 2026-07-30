@@ -204,21 +204,12 @@ def hamta_zon_data(zon_kod):
     except Exception:
         return None
 
-@st.cache_data(ttl=86400)
-def hamta_sverige_geojson():
-    url = "https://raw.githubusercontent.com/electricitymaps/electricitymaps-contrib/master/config/zones/SE.geojson"
-    try:
-        res = requests.get(url, timeout=10)
-        return res.json() if res.status_code == 200 else None
-    except Exception:
-        return None
-
 # ==========================================
-# FLIK 1: EXAKT SVERIGEKARTA UTAN RINGAR
+# FLIK 1: SVERIGEKARTA ANPASSAD TILL KUSTLINJEN
 # ==========================================
 with tab1:
     st.markdown("### Interaktiv Elpriskarta över Sveriges Elområden")
-    st.write("Klicka eller för muspekaren direkt över elområdena på kartan för att se dagsaktuella priser.")
+    st.write("Klicka eller för muspekaren över regionerna för att se aktuella priser och ingående städer per elområde.")
 
     zon_stats = {}
     for z_kod in ["SE1", "SE2", "SE3", "SE4"]:
@@ -255,86 +246,76 @@ with tab1:
 
         m = folium.Map(location=[62.5, 16.5], zoom_start=5.0, tiles="cartodbpositron")
 
-        ZON_FARG = {
-            "SE1": "#3b82f6",
-            "SE2": "#10b981",
-            "SE3": "#f59e0b",
-            "SE4": "#ef4444"
+        # Exaktare koordinatlinjer följer Sveriges kust och gräns mot Norge/Finland
+        REGION_POLYGONER = {
+            "SE1": {
+                "farg": "#3b82f6",
+                "coords": [
+                    [69.06, 20.55], [68.90, 21.00], [68.50, 22.20], [68.20, 23.10], [67.80, 23.60],
+                    [66.50, 24.15], [65.80, 24.10], [65.50, 22.20], [65.20, 21.50], [65.00, 21.30],
+                    [65.00, 18.00], [65.00, 15.00], [65.50, 14.50], [66.00, 14.70], [66.80, 15.50],
+                    [67.80, 16.50], [68.40, 18.20], [69.06, 20.55]
+                ],
+                "namn": "SE1 – Norra Sverige",
+                "stader": "Luleå, Kiruna, Boden, Piteå, Skellefteå"
+            },
+            "SE2": {
+                "farg": "#10b981",
+                "coords": [
+                    [65.00, 15.00], [65.00, 18.00], [65.00, 21.30], [64.80, 21.00], [63.80, 20.30],
+                    [62.80, 18.20], [61.70, 17.50], [60.60, 17.20], [60.60, 15.50], [60.60, 13.00],
+                    [61.50, 12.20], [62.20, 12.00], [63.20, 12.00], [64.20, 13.80], [65.00, 15.00]
+                ],
+                "namn": "SE2 – Norra Mellansverige",
+                "stader": "Sundsvall, Umeå, Östersund, Gävle, Härnösand"
+            },
+            "SE3": {
+                "farg": "#f59e0b",
+                "coords": [
+                    [60.60, 13.00], [60.60, 15.50], [60.60, 17.20], [60.30, 18.00], [59.80, 19.00],
+                    [58.90, 18.20], [58.60, 17.20], [57.30, 16.80], [57.30, 14.00], [57.30, 12.00],
+                    [58.50, 11.20], [59.00, 11.20], [59.90, 12.20], [60.60, 13.00]
+                ],
+                "namn": "SE3 – Södra Mellansverige",
+                "stader": "Stockholm, Göteborg, Uppsala, Västerås, Örebro"
+            },
+            "SE4": {
+                "farg": "#ef4444",
+                "coords": [
+                    [57.30, 12.00], [57.30, 14.00], [57.30, 16.80], [56.60, 16.40], [56.10, 15.60],
+                    [56.00, 14.80], [55.40, 14.20], [55.35, 13.30], [55.40, 12.80], [56.20, 12.50],
+                    [56.50, 12.90], [57.30, 12.00]
+                ],
+                "namn": "SE4 – Södra Sverige",
+                "stader": "Malmö, Helsingborg, Lund, Växjö, Karlskrona"
+            }
         }
 
-        STADER_PER_ZON = {
-            "SE1": "Luleå, Kiruna, Boden, Piteå, Skellefteå",
-            "SE2": "Sundsvall, Umeå, Östersund, Gävle, Härnösand",
-            "SE3": "Stockholm, Göteborg, Uppsala, Västerås, Örebro",
-            "SE4": "Malmö, Helsingborg, Lund, Växjö, Karlskrona"
-        }
+        for z_kod, reg in REGION_POLYGONER.items():
+            stats = zon_stats[z_kod]
+            popup_html = f"""
+                <div style="font-family: Arial, sans-serif; width: 220px; padding: 4px;">
+                    <h4 style="margin:0 0 6px 0; color:{reg['farg']};">{reg['namn']}</h4>
+                    <p style="margin:2px 0;"><b>Medelpris idag:</b> {stats['snitt']:.2f} kr/kWh</p>
+                    <p style="margin:2px 0; color:#ef4444;"><b>Högsta timpris:</b> {stats['max']:.2f} kr/kWh</p>
+                    <p style="margin:2px 0; color:#10b981;"><b>Lägsta timpris:</b> {stats['min']:.2f} kr/kWh</p>
+                    <hr style="margin:6px 0; border:0; border-top:1px solid #e2e8f0;">
+                    <small style="color:#64748b;"><b>Ingående städer:</b><br>{reg['stader']}</small>
+                </div>
+            """
 
-        geojson_data = hamta_sverige_geojson()
-
-        if geojson_data:
-            # Berika GeoJSON med priser och detaljer så att man klickar direkt på landytan
-            for feature in geojson_data.get("features", []):
-                props = feature.get("properties", {})
-                zone_key = props.get("zoneKey", "")
-                
-                # Hitta vilken zon koden tillhör (SE1, SE2, SE3 eller SE4)
-                match_zon = None
-                for z in ["SE1", "SE2", "SE3", "SE4"]:
-                    if z in zone_key:
-                        match_zon = z
-                        break
-                
-                if match_zon and match_zon in zon_stats:
-                    st_data = zon_stats[match_zon]
-                    props["zon_namn"] = f"{match_zon} Elområde"
-                    props["snitt_pris"] = f"{st_data['snitt']:.2f} kr/kWh"
-                    props["max_pris"] = f"{st_data['max']:.2f} kr/kWh"
-                    props["min_pris"] = f"{st_data['min']:.2f} kr/kWh"
-                    props["stader"] = STADER_PER_ZON[match_zon]
-                    props["farg"] = ZON_FARG[match_zon]
-                else:
-                    props["zon_namn"] = "Elområde Sverige"
-                    props["snitt_pris"] = "N/A"
-                    props["max_pris"] = "N/A"
-                    props["min_pris"] = "N/A"
-                    props["stader"] = "-"
-                    props["farg"] = "#64748b"
-
-            def style_function(feature):
-                farg = feature.get("properties", {}).get("farg", "#3b82f6")
-                return {
-                    "fillColor": farg,
-                    "color": "#ffffff",
-                    "weight": 2,
-                    "fillOpacity": 0.55
-                }
-
-            def highlight_function(feature):
-                return {
-                    "weight": 3,
-                    "color": "#0f172a",
-                    "fillOpacity": 0.75
-                }
-
-            # Rita ut enbart de färglagda Sverageregionerna
-            folium.GeoJson(
-                geojson_data,
-                style_function=style_function,
-                highlight_function=highlight_function,
-                popup=folium.GeoJsonPopup(
-                    fields=["zon_namn", "snitt_pris", "max_pris", "min_pris", "stader"],
-                    aliases=["Elområde:", "Medelpris idag:", "Högsta pris:", "Lägsta pris:", "Städer:"],
-                    style="font-family: Arial; font-size: 13px; padding: 6px;",
-                    labels=True
-                ),
-                tooltip=folium.GeoJsonTooltip(
-                    fields=["zon_namn", "snitt_pris"],
-                    aliases=["", "Medelpris:"],
-                    style="font-family: Arial; font-size: 12px; padding: 4px;"
-                )
+            folium.Polygon(
+                locations=reg["coords"],
+                color=reg["farg"],
+                weight=2,
+                fill=True,
+                fill_color=reg["farg"],
+                fill_opacity=0.45,
+                popup=folium.Popup(popup_html, max_width=250),
+                tooltip=f"{reg['namn']} — Medelpris: {stats['snitt']:.2f} kr/kWh"
             ).add_to(m)
 
-        st_folium(m, width="100%", height=560)
+        st_folium(m, width="100%", height=540)
 
     else:
         st.warning("Kunde inte hämta kartdata just nu.")
@@ -504,4 +485,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.4 • Utvecklad med Python & Streamlit • Ren GeoJSON Regionkarta utan markörer.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.5 • Utvecklad med Python & Streamlit • Kustanpassade Elområdesregioner.</div>', unsafe_allow_html=True)
