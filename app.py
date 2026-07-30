@@ -30,13 +30,23 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-# CSS Styling - Rensad från blå klick-markeringar/fokusramar
+# CSS Styling - Rensad från blå underlinjer, fokusramar och klick-markeringar
 st.markdown("""
     <style>
-    /* Ta bort blå markeringar/fokusramar vid klick på alla element */
-    *:focus, button:focus, [tabindex]:focus {
+    /* Ta bort Streamlits animerade underlinjer och tab-borders */
+    div[data-baseweb="tab-highlight"] {
+        display: none !important;
+        background-color: transparent !important;
+    }
+    div[data-baseweb="tab-border"] {
+        display: none !important;
+    }
+
+    /* Ta bort blå fokusramar och markeringar i hela appen */
+    *:focus, button:focus, [tabindex]:focus, div:focus {
         outline: none !important;
         box-shadow: none !important;
+        border-color: transparent !important;
     }
     
     /* Bakgrund */
@@ -106,10 +116,10 @@ st.markdown("""
         margin-top: 0.3rem; 
     }
 
-    /* Stora stilrena Flikknappar */
+    /* Stora stilrena Flikknappar utan blåa underlinjer */
     .stTabs [data-baseweb="tab-list"] { 
         gap: 12px; 
-        border-bottom: 3px solid #cbd5e1; 
+        border-bottom: 2px solid #cbd5e1; 
         padding-bottom: 8px; 
     }
 
@@ -125,15 +135,16 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
-    .stTabs [data-baseweb="tab"]:focus {
+    .stTabs [data-baseweb="tab"]:focus, .stTabs [data-baseweb="tab"]:active {
         outline: none !important;
+        border-color: #cbd5e1 !important;
     }
 
     .stTabs [aria-selected="true"] { 
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; 
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important; 
         color: #ffffff !important; 
         border: none !important;
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3) !important;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3) !important;
     }
 
     /* Informationsrutor */
