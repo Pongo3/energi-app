@@ -2,10 +2,12 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
+import folium
+from streamlit_folium import st_folium
 
 # Sidkonfiguration
 st.set_page_config(
-    page_title="EnergyIQ | Digital Energianalys & Klimatberäkning",
+    page_title="EnergyIQ | Digital Energianalys & Interaktiv Karta",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -28,11 +30,11 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-ZON_KOORDINATER = {
-    "SE1": {"lat": 66.0, "lon": 19.0, "namn": "SE1 (Norra Sverige)"},
-    "SE2": {"lat": 63.0, "lon": 16.5, "namn": "SE2 (Norra Mellansverige)"},
-    "SE3": {"lat": 59.3, "lon": 15.0, "namn": "SE3 (Södra Mellansverige)"},
-    "SE4": {"lat": 56.5, "lon": 13.8, "namn": "SE4 (Södra Sverige)"}
+ZON_DETAILS = {
+    "SE1": {"lat": 66.0, "lon": 19.0, "namn": "SE1 – Norra Sverige", "farg": "#3b82f6", "beskrivning": "Luleå, Kiruna, Skellefteå"},
+    "SE2": {"lat": 62.8, "lon": 16.5, "namn": "SE2 – Norra Mellansverige", "farg": "#10b981", "beskrivning": "Sundsvall, Umeå, Östersund"},
+    "SE3": {"lat": 59.3, "lon": 15.0, "namn": "SE3 – Södra Mellansverige", "farg": "#f59e0b", "beskrivning": "Stockholm, Göteborg, Uppsala"},
+    "SE4": {"lat": 56.5, "lon": 14.0, "namn": "SE4 – Södra Sverige", "farg": "#ef4444", "beskrivning": "Malmö, Helsingborg, Växjö"}
 }
 
 # CSS Styling
@@ -98,12 +100,12 @@ st.markdown("""
 st.markdown("""
     <div class="main-header">
         <h1>⚡ EnergyIQ Platform</h1>
-        <p>Smart energianalys, realtidskarta över Sverige, ekonomi- & CO₂-kalkylatorer.</p>
+        <p>Smart energianalys, klickbar kalkylatorkarta över Sverige, ekonomi- & CO₂-analys.</p>
     </div>
 """, unsafe_allow_html=True)
 
 # Navigation via 4 Flikar
-tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
+tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Klickbar Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
 
 today = datetime.now()
 
@@ -117,46 +119,86 @@ def hamta_zon_data(zon_kod):
         return None
 
 # ==========================================
-# FLIK 1: SVERIGEKARTA
+# FLIK 1: KLICKBAR SVERIGEKARTA
 # ==========================================
 with tab1:
-    st.markdown("### 🗺️ Elpriser i Sverige i Realtid")
-    map_rows = []
-    zon_stats = {}
+    st.markdown("### 🗺️ Interaktiv Elpriskarta över Sverige")
+    st.write("👉 **Klicka på cirklarna eller markörerna på kartan** för att se dagsaktuella priser, högsta/lägsta timpris och ingående städer.")
 
-    for z_kod, z_info in ZON_KOORDINATER.items():
+    zon_stats = {}
+    for z_kod in ["SE1", "SE2", "SE3", "SE4"]:
         z_data = hamta_zon_data(z_kod)
         if z_data:
             df_z = pd.DataFrame(z_data)
             snitt = df_z['SEK_per_kWh'].mean()
+            max_p = df_z['SEK_per_kWh'].max()
+            min_p = df_z['SEK_per_kWh'].min()
             nuvarande_timme = datetime.now().hour
             nu_pris = df_z['SEK_per_kWh'].iloc[nuvarande_timme] if nuvarande_timme < len(df_z) else snitt
-            
-            zon_stats[z_kod] = {"snitt": snitt, "nu": nu_pris}
-            map_rows.append({
-                "lat": z_info["lat"],
-                "lon": z_info["lon"],
-                "Zon": z_info["namn"],
-                "Medelpris (kr/kWh)": round(snitt, 2)
-            })
+            zon_stats[z_kod] = {"snitt": snitt, "nu": nu_pris, "max": max_p, "min": min_p}
 
     if zon_stats:
+        # KPI-kort högst upp
         c1, c2, c3, c4 = st.columns(4)
-        zon_cols = [c1, c2, c3, c4]
-        for idx, (z_kod, z_info) in enumerate(ZON_KOORDINATER.items()):
-            with zon_cols[idx]:
+        meddelanden = [
+            ("SE1 Norrbotten", "SE1", c1, "#3b82f6"),
+            ("SE2 Sundsvall", "SE2", c2, "#10b981"),
+            ("SE3 Sthlm/Gbg", "SE3", c3, "#f59e0b"),
+            ("SE4 Malmö/Syd", "SE4", c4, "#ef4444")
+        ]
+        
+        for titel, z_kod, col, farg in meddelanden:
+            with col:
                 st.markdown(f"""
-                    <div class="metric-card">
-                        <div class="metric-label">{z_kod} ({z_info['namn'].split(' ')[1]})</div>
+                    <div class="metric-card" style="border-top: 5px solid {farg};">
+                        <div class="metric-label">{titel}</div>
                         <div class="metric-value">{zon_stats[z_kod]['snitt']:.2f} kr</div>
                         <div class="metric-subtext">Just nu: {zon_stats[z_kod]['nu']:.2f} kr/kWh</div>
                     </div>
                 """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📍 Geografisk översikt över Elområdena")
-        df_map = pd.DataFrame(map_rows)
-        st.map(df_map, latitude="lat", longitude="lon", zoom=4)
+
+        # Skapa interaktiv Folium-karta
+        m = folium.Map(location=[62.5, 16.5], zoom_start=4.8, tiles="cartodbpositron")
+
+        # Lägg till klickbara cirklar och markörer för varje elområde
+        for z_kod, z_info in ZON_DETAILS.items():
+            stats = zon_stats[z_kod]
+            popup_html = f"""
+                <div style="font-family: Arial, sans-serif; width: 220px;">
+                    <h4 style="margin:0 0 5px 0; color:{z_info['farg']};">{z_info['namn']}</h4>
+                    <p style="margin:2px 0;"><b>Medelpris idag:</b> {stats['snitt']:.2f} kr/kWh</p>
+                    <p style="margin:2px 0;"><b>Högsta timpris:</b> {stats['max']:.2f} kr/kWh</p>
+                    <p style="margin:2px 0;"><b>Lägsta timpris:</b> {stats['min']:.2f} kr/kWh</p>
+                    <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
+                    <small style="color:#666;"><b>Städer:</b> {z_info['beskrivning']}</small>
+                </div>
+            """
+
+            # Cirkelområde
+            folium.Circle(
+                location=[z_info["lat"], z_info["lon"]],
+                radius=110000,
+                color=z_info["farg"],
+                fill=True,
+                fill_color=z_info["farg"],
+                fill_opacity=0.35,
+                tooltip=f"Klicka för priser i {z_kod}"
+            ).add_to(m)
+
+            # Markör
+            folium.Marker(
+                location=[z_info["lat"], z_info["lon"]],
+                popup=folium.Popup(popup_html, max_width=260),
+                tooltip=f"⚡ {z_kod}: {stats['snitt']:.2f} kr/kWh"
+            ).add_to(m)
+
+        # Visning i Streamlit
+        st_folium(m, width="100%", height=520)
+
+    else:
+        st.warning("Kunde inte hämta kartdata just nu.")
 
 # ==========================================
 # FLIK 2: STADSANALYS
@@ -255,8 +297,6 @@ with tab3:
 # ==========================================
 with tab4:
     st.markdown("### 🌱 Klimatberäkning & Utsläppsminskning (CO₂e)")
-    st.write("Se hur mycket koldioxidutsläpp din anläggning sparar över tid jämfört med fossila och traditionella energikällor.")
-
     c_co1, c_co2 = st.columns(2)
     with c_co1:
         effekt_kw_co2 = st.number_input("Installerad solcellseffekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_co2")
@@ -276,9 +316,8 @@ with tab4:
     }
 
     val_g_co2 = CO2_FAKTORER[jamforelse_kraft]
-    
     prod_ar_kwh = effekt_kw_co2 * 950
-    netto_sparad_co2_g_kwh = max(0, val_g_co2 - 40) # 40g/kWh = schablon för tillverkning
+    netto_sparad_co2_g_kwh = max(0, val_g_co2 - 40)
     
     co2_sparad_ar_ton = (prod_ar_kwh * netto_sparad_co2_g_kwh) / 1_000_000
     co2_sparad_total_ton = co2_sparad_ar_ton * anlaggning_livslangd
@@ -306,20 +345,17 @@ with tab4:
     with e2:
         st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;">🌲 <b>Motsvarar Trädplantering:</b> ca <b>{antal_trad:,.0f} växande träd</b> som binder koldioxid i 10 år.</div>', unsafe_allow_html=True)
 
-    # LCA DISCLAIMER & METODRUTA
     st.markdown("""
         <div class="disclaimer-box">
             <b>📋 Metod, Avgränsning & LCA-Disclaimer:</b><br>
-            • <b>Vad som ingår i kalkylen:</b> Kalkylen baseras på en schabloniserad Livscykelanalys (LCA) där solcellernas tillverkning beräknas generera <b>~40 g CO₂e/kWh</b> under sin livslängd. Nettoinbesparingen beräknas som differensen mellan den ersatta elens koldioxidintensitet och solcellernas tillverkningsavtryck.<br>
-            • <b>Vad som INTE ingår:</b> Specifik transportsträcka från tillverkningsland till installationsplats, utsläpp kopplade till fysiskt monteringsarbete/ställningar på plats, inverkan av växelriktares utbyte under livslängden samt sluthantering/återvinning (End-of-Life).<br>
-            • <i>Kalkylen är indikativ och utformad för att ge ett pedagogiskt beslutsunderlag. För officiella ESG- och GHG-rapporter rekommenderas specifik LCA-analys från leverantören.</i>
+            • <b>Vad som ingår i kalkylen:</b> Kalkylen baseras på en schabloniserad Livscykelanalys (LCA) där solcellernas tillverkning beräknas generera <b>~40 g CO₂e/kWh</b> under sin livslängd.<br>
+            • <b>Vad som INTE ingår:</b> Specifik transportsträcka från tillverkningsland, utsläpp kopplade till montering på plats, växelriktares utbyte samt sluthantering/återvinning.<br>
+            • <i>Kalkylen är indikativ och utformad för att ge ett pedagogiskt beslutsunderlag.</i>
         </div>
     """, unsafe_allow_html=True)
 
-    # Jämförelsegraf över energislagens CO2-avtryck
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("⚖️ CO₂-utsläpp per kWh för olika energislag (g CO₂e/kWh)")
-    
     df_co2_comp = pd.DataFrame({
         "Energislag": ["Kolkraft", "Naturgas", "Solceller (Tillverkning)", "Vattenkraft", "Kärnkraft"],
         "Gram CO2 per kWh": [820, 490, 40, 24, 12]
@@ -328,4 +364,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.6 • Utvecklad med Python & Streamlit • Live Sverigekarta, Ekonomi & CO₂-klimatberäkningar med LCA-disclaimer.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.7 • Utvecklad med Python & Streamlit • Klickbar Sverigekarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
