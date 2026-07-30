@@ -205,7 +205,7 @@ def hamta_zon_data(zon_kod):
         return None
 
 # ==========================================
-# FLIK 1: SVERIGEKARTA ANPASSAD TILL KUSTLINJEN
+# FLIK 1: SVERIGEKARTA
 # ==========================================
 with tab1:
     st.markdown("### Interaktiv Elpriskarta över Sveriges Elområden")
@@ -246,7 +246,6 @@ with tab1:
 
         m = folium.Map(location=[62.5, 16.5], zoom_start=5.0, tiles="cartodbpositron")
 
-        # Exaktare koordinatlinjer följer Sveriges kust och gräns mot Norge/Finland
         REGION_POLYGONER = {
             "SE1": {
                 "farg": "#3b82f6",
@@ -362,27 +361,62 @@ with tab2:
         st.line_chart(chart_data, height=350, use_container_width=True)
 
 # ==========================================
-# FLIK 3: EKONOMI & PAYBACK
+# FLIK 3: EKONOMI & PAYBACK (MED FÖRKLARANDE TOOLTIPS)
 # ==========================================
 with tab3:
     st.markdown("### Investeringskalkylator (Solceller & Batterilagring)")
+    st.caption("Håll muspekaren över frågetecken-ikonerna (?) för att se förklaringar av beräkningarna.")
+    
     col_in1, col_in2 = st.columns(2)
     with col_in1:
-        effekt_kw = st.number_input("Installerad effekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_ekonomi")
-        kostnad_sol = st.number_input("Investeringskostnad solceller (kr e. avdrag):", value=100000, step=5000)
-        egenanvandning_pct = st.slider("Egenanvänd el (%):", 20, 80, 40)
+        effekt_kw = st.number_input(
+            "Installerad effekt (kWp):", 
+            min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_ekonomi",
+            help="Solcellsanläggningens maximala toppeffekt i kilowatt-peak (kWp) under ideala förhållanden. Normalt ger 1 kWp ca 950 kWh el per år i Sverige."
+        )
+        
+        kostnad_sol = st.number_input(
+            "Investeringskostnad solceller (kr e. avdrag):", 
+            value=100000, step=5000,
+            help="Den totala investeringskostnaden för solceller och växelriktare efter nyttjat Grön Teknik-skatteavdrag (20% på material & arbete)."
+        )
+        
+        egenanvandning_pct = st.slider(
+            "Egenanvänd el (%):", 
+            20, 80, 40,
+            help="Hur stor andel av din producerade solel som du förbrukar själv i fastigheten (t.ex. till hushållsel/laddbox). Resterande el säljs automatiskt ut på elnätet."
+        )
 
     with col_in2:
-        har_batteri = st.checkbox("Inkludera Batterilagring", value=True, key="bat_ekonomi")
+        har_batteri = st.checkbox(
+            "Inkludera Batterilagring", 
+            value=True, key="bat_ekonomi",
+            help="Bocka i om du vill beräkna investeringen tillsammans med ett hembatteri för energilagring."
+        )
+        
         if har_batteri:
-            batteri_kwh = st.number_input("Batterikapacitet (kWh):", min_value=1.0, max_value=50.0, value=10.0, step=1.0)
-            kostnad_batteri = st.number_input("Investeringskostnad batteri (kr e. avdrag):", value=50000, step=5000)
+            batteri_kwh = st.number_input(
+                "Batterikapacitet (kWh):", 
+                min_value=1.0, max_value=50.0, value=10.0, step=1.0,
+                help="Batteriets lagringskapacitet i kilowattimmar (kWh). Gör det möjligt att spara dagens solel till kvällens och nattens förbrukning."
+            )
+            
+            kostnad_batteri = st.number_input(
+                "Investeringskostnad batteri (kr e. avdrag):", 
+                value=50000, step=5000,
+                help="Nettoinvesteringen för batterilagring efter Grön Teknik-avdraget (som täcker upp till 50% av kostnaden för batterier)."
+            )
         else:
             batteri_kwh = 0
             kostnad_batteri = 0
 
-        elpris_snitt = st.number_input("Förväntat medel-elpris inkl. skatt (kr/kWh):", value=1.8, step=0.1)
+        elpris_snitt = st.number_input(
+            "Förväntat medel-elpris inkl. skatt (kr/kWh):", 
+            value=1.8, step=0.1,
+            help="Det uppskattade genomsnittliga elpriset inklusive elhandelspris, energiskatt, elöverföring och moms över anläggningens livslängd."
+        )
 
+    # Beräkningar
     produktion_ar = effekt_kw * 950  
     egen_sol = produktion_ar * (egenanvandning_pct / 100)
     sold_sol = produktion_ar - egen_sol
@@ -407,6 +441,8 @@ with tab3:
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Ackumulerat Kassaflöde över 15 år")
+    st.caption("Diagrammet visar din investeringsresa. När linjen passerar 0 kr har anläggningen betalat av sig själv och genererar ren vinst.")
+    
     years = list(range(0, 16))
     cashflow = [-total_investering + (yr * total_besparing_ar) for yr in years]
     df_cf = pd.DataFrame({"Kassaflöde (kr)": cashflow}, index=years)
@@ -485,4 +521,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.5 • Utvecklad med Python & Streamlit • Kustanpassade Elområdesregioner.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.6 • Utvecklad med Python & Streamlit • Förklarande hjälptexter i kalkylatorn.</div>', unsafe_allow_html=True)
