@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Sidkonfiguration
 st.set_page_config(
-    page_title="EnergyIQ | Digital Energianalys & Sverigekarta",
+    page_title="EnergyIQ | Digital Energianalys & Klimatberäkning",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -28,7 +28,6 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-# Koordinater för elområdenas centrum i Sverige
 ZON_KOORDINATER = {
     "SE1": {"lat": 66.0, "lon": 19.0, "namn": "SE1 (Norra Sverige)"},
     "SE2": {"lat": 63.0, "lon": 16.5, "namn": "SE2 (Norra Mellansverige)"},
@@ -36,7 +35,7 @@ ZON_KOORDINATER = {
     "SE4": {"lat": 56.5, "lon": 13.8, "namn": "SE4 (Södra Sverige)"}
 }
 
-# Anpassad CSS för SaaS-känsla
+# CSS Styling
 st.markdown("""
     <style>
     .main { background-color: #f8fafc; }
@@ -80,6 +79,17 @@ st.markdown("""
         font-size: 0.95rem;
     }
 
+    .disclaimer-box {
+        background-color: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-left: 4px solid #64748b;
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin-top: 2rem;
+        font-size: 0.88rem;
+        color: #334155;
+    }
+
     .disclaimer-text { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
     </style>
 """, unsafe_allow_html=True)
@@ -88,12 +98,12 @@ st.markdown("""
 st.markdown("""
     <div class="main-header">
         <h1>⚡ EnergyIQ Platform</h1>
-        <p>Smart energianalys, realtidskarta över Sverige och investeringskalkylatorer för solceller & batterilagring.</p>
+        <p>Smart energianalys, realtidskarta över Sverige, ekonomi- & CO₂-kalkylatorer.</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Navigation via Flikar
-tab1, tab2, tab3 = st.tabs(["🗺️ Sverigekarta (Realtid)", "📊 Stad/Kommun Analys", "☀️ Investeringskalkylator"])
+# Navigation via 4 Flikar
+tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
 
 today = datetime.now()
 
@@ -111,9 +121,6 @@ def hamta_zon_data(zon_kod):
 # ==========================================
 with tab1:
     st.markdown("### 🗺️ Elpriser i Sverige i Realtid")
-    st.write("Jämför dagens medelpriser och nuvarande timpris över hela landet.")
-
-    # Hämta data för alla 4 zoner
     map_rows = []
     zon_stats = {}
 
@@ -134,7 +141,6 @@ with tab1:
             })
 
     if zon_stats:
-        # Visa 4 kort för alla zoner
         c1, c2, c3, c4 = st.columns(4)
         zon_cols = [c1, c2, c3, c4]
         for idx, (z_kod, z_info) in enumerate(ZON_KOORDINATER.items()):
@@ -151,15 +157,12 @@ with tab1:
         st.subheader("📍 Geografisk översikt över Elområdena")
         df_map = pd.DataFrame(map_rows)
         st.map(df_map, latitude="lat", longitude="lon", zoom=4)
-    else:
-        st.warning("Kunde inte ladda kartdata för alla zoner just nu.")
 
 # ==========================================
 # FLIK 2: STADSANALYS
 # ==========================================
 with tab2:
     st.markdown("### 📊 Dagsaktuella Timpriser per Stad/Kommun")
-    
     col_sel1, col_sel2 = st.columns(2)
     with col_sel1:
         valdv_stad = st.selectbox(
@@ -174,7 +177,6 @@ with tab2:
         st.info(f"📍 **{valdv_stad}** tillhör elområde **{zon}**")
 
     data = hamta_zon_data(zon)
-
     if data:
         df = pd.DataFrame(data)
         df['SEK_per_kWh'] = df['SEK_per_kWh'].round(2)
@@ -186,52 +188,30 @@ with tab2:
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">Medelpris Idag ({valdv_stad})</div>
-                    <div class="metric-value">{snitt_pris:.2f} kr</div>
-                    <div class="metric-subtext">per kWh (exkl. nät & skatt)</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card"><div class="metric-label">Medelpris ({valdv_stad})</div><div class="metric-value">{snitt_pris:.2f} kr</div></div>', unsafe_allow_html=True)
         with c2:
-            st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">Högsta Timpris</div>
-                    <div class="metric-value" style="color: #ef4444;">{max_pris:.2f} kr</div>
-                    <div class="metric-subtext" style="color: #ef4444;">Dagens toppnotering</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card"><div class="metric-label">Högsta Timpris</div><div class="metric-value" style="color: #ef4444;">{max_pris:.2f} kr</div></div>', unsafe_allow_html=True)
         with c3:
-            st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">Lägsta Timpris</div>
-                    <div class="metric-value" style="color: #10b981;">{min_pris:.2f} kr</div>
-                    <div class="metric-subtext" style="color: #10b981;">Bästa laddtimme</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="metric-card"><div class="metric-label">Lägsta Timpris</div><div class="metric-value" style="color: #10b981;">{min_pris:.2f} kr</div></div>', unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader(f"📈 Prisvariation i {valdv_stad} idag (SEK/kWh)")
+        st.subheader(f"📈 Prisvariation i {valdv_stad} idag")
         chart_data = df.set_index("Timme")[["SEK_per_kWh"]]
         st.line_chart(chart_data, height=350, use_container_width=True)
 
 # ==========================================
-# FLIK 3: INVESTERINGSKALKYLATOR
+# FLIK 3: EKONOMI & PAYBACK
 # ==========================================
 with tab3:
     st.markdown("### ☀️ Investeringskalkylator (Solceller & Batterilagring)")
-    st.write("Skräddarsy parametrarna för att beräkna den uppskattade återbetalningstiden och 15-åriga kassaflödet.")
-
     col_in1, col_in2 = st.columns(2)
     with col_in1:
-        st.markdown("#### 1. Solcellsanläggning")
-        effekt_kw = st.number_input("Installerad effekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5)
+        effekt_kw = st.number_input("Installerad effekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_ekonomi")
         kostnad_sol = st.number_input("Investeringskostnad solceller (kr e. avdrag):", value=100000, step=5000)
         egenanvandning_pct = st.slider("Egenanvänd el (%):", 20, 80, 40)
 
     with col_in2:
-        st.markdown("#### 2. Batterilagring & Elpris")
-        har_batteri = st.checkbox("Inkludera Batterilagring", value=True)
+        har_batteri = st.checkbox("Inkludera Batterilagring", value=True, key="bat_ekonomi")
         if har_batteri:
             batteri_kwh = st.number_input("Batterikapacitet (kWh):", min_value=1.0, max_value=50.0, value=10.0, step=1.0)
             kostnad_batteri = st.number_input("Investeringskostnad batteri (kr e. avdrag):", value=50000, step=5000)
@@ -253,8 +233,6 @@ with tab3:
     payback_ar = total_investering / total_besparing_ar if total_besparing_ar > 0 else 0
 
     st.markdown("---")
-    st.markdown("### 📊 Investeringsresultat")
-
     r1, r2, r3, r4 = st.columns(4)
     with r1:
         st.markdown(f'<div class="metric-card"><div class="metric-label">Årlig Produktion</div><div class="metric-value">{produktion_ar:,.0f}</div><div class="metric-subtext">kWh / år</div></div>', unsafe_allow_html=True)
@@ -272,5 +250,82 @@ with tab3:
     df_cf = pd.DataFrame({"Kassaflöde (kr)": cashflow}, index=years)
     st.line_chart(df_cf, height=350, use_container_width=True)
 
+# ==========================================
+# FLIK 4: CO2 OCH KLIMATNYTTA
+# ==========================================
+with tab4:
+    st.markdown("### 🌱 Klimatberäkning & Utsläppsminskning (CO₂e)")
+    st.write("Se hur mycket koldioxidutsläpp din anläggning sparar över tid jämfört med fossila och traditionella energikällor.")
+
+    c_co1, c_co2 = st.columns(2)
+    with c_co1:
+        effekt_kw_co2 = st.number_input("Installerad solcellseffekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_co2")
+        jamforelse_kraft = st.selectbox(
+            "Jämför mot ersatt energikälla (Marginalel):",
+            ["Europeisk Marginalel (Kol/Gas ~ 400 g/kWh)", "Nordisk Mix (~ 120 g/kWh)", "Svenskt Elnät (~ 45 g/kWh)", "Kolkraft (~ 900 g/kWh)"]
+        )
+
+    with c_co2:
+        anlaggning_livslangd = st.slider("Anläggningens livslängd (År):", 10, 30, 25)
+
+    CO2_FAKTORER = {
+        "Europeisk Marginalel (Kol/Gas ~ 400 g/kWh)": 400,
+        "Nordisk Mix (~ 120 g/kWh)": 120,
+        "Svenskt Elnät (~ 45 g/kWh)": 45,
+        "Kolkraft (~ 900 g/kWh)": 900
+    }
+
+    val_g_co2 = CO2_FAKTORER[jamforelse_kraft]
+    
+    prod_ar_kwh = effekt_kw_co2 * 950
+    netto_sparad_co2_g_kwh = max(0, val_g_co2 - 40) # 40g/kWh = schablon för tillverkning
+    
+    co2_sparad_ar_ton = (prod_ar_kwh * netto_sparad_co2_g_kwh) / 1_000_000
+    co2_sparad_total_ton = co2_sparad_ar_ton * anlaggning_livslangd
+
+    bensin_mil = co2_sparad_total_ton * 650
+    antal_trad = co2_sparad_total_ton * 50
+
+    st.markdown("---")
+    st.markdown("### 📊 Uppskattad Klimatnytta")
+
+    k1, k2, k3 = st.columns(3)
+    with k1:
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Årlig CO₂-Inbesparing</div><div class="metric-value" style="color: #10b981;">{co2_sparad_ar_ton:.2f} ton</div><div class="metric-subtext">CO₂e per år</div></div>', unsafe_allow_html=True)
+    with k2:
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Total CO₂-Minskning ({anlaggning_livslangd} år)</div><div class="metric-value" style="color: #10b981;">{co2_sparad_total_ton:.1f} ton</div><div class="metric-subtext">nettoinbesparing</div></div>', unsafe_allow_html=True)
+    with k3:
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Klimatskuld Betald efter</div><div class="metric-value" style="color: #3b82f6;">1.8 år</div><div class="metric-subtext">Energetisk återbetalningstid</div></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("#### 🚗 Vad motsvarar koldioxidminskningen?")
+    
+    e1, e2 = st.columns(2)
+    with e1:
+        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;">🚗 <b>Motsvarar Bensinbil:</b> ca <b>{bensin_mil:,.0f} mil</b> i körtsträcka med en normal bensinbil över {anlaggning_livslangd} år.</div>', unsafe_allow_html=True)
+    with e2:
+        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;">🌲 <b>Motsvarar Trädplantering:</b> ca <b>{antal_trad:,.0f} växande träd</b> som binder koldioxid i 10 år.</div>', unsafe_allow_html=True)
+
+    # LCA DISCLAIMER & METODRUTA
+    st.markdown("""
+        <div class="disclaimer-box">
+            <b>📋 Metod, Avgränsning & LCA-Disclaimer:</b><br>
+            • <b>Vad som ingår i kalkylen:</b> Kalkylen baseras på en schabloniserad Livscykelanalys (LCA) där solcellernas tillverkning beräknas generera <b>~40 g CO₂e/kWh</b> under sin livslängd. Nettoinbesparingen beräknas som differensen mellan den ersatta elens koldioxidintensitet och solcellernas tillverkningsavtryck.<br>
+            • <b>Vad som INTE ingår:</b> Specifik transportsträcka från tillverkningsland till installationsplats, utsläpp kopplade till fysiskt monteringsarbete/ställningar på plats, inverkan av växelriktares utbyte under livslängden samt sluthantering/återvinning (End-of-Life).<br>
+            • <i>Kalkylen är indikativ och utformad för att ge ett pedagogiskt beslutsunderlag. För officiella ESG- och GHG-rapporter rekommenderas specifik LCA-analys från leverantören.</i>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Jämförelsegraf över energislagens CO2-avtryck
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("⚖️ CO₂-utsläpp per kWh för olika energislag (g CO₂e/kWh)")
+    
+    df_co2_comp = pd.DataFrame({
+        "Energislag": ["Kolkraft", "Naturgas", "Solceller (Tillverkning)", "Vattenkraft", "Kärnkraft"],
+        "Gram CO2 per kWh": [820, 490, 40, 24, 12]
+    }).set_index("Energislag")
+
+    st.bar_chart(df_co2_comp, height=350, use_container_width=True)
+
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.4 • Utvecklad med Python & Streamlit • Live Sverigekarta & Nord Pool-data.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.6 • Utvecklad med Python & Streamlit • Live Sverigekarta, Ekonomi & CO₂-klimatberäkningar med LCA-disclaimer.</div>', unsafe_allow_html=True)
