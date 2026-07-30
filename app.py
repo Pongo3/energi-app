@@ -30,9 +30,15 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-# CSS Styling - Avskalad, professionell design utan emojis
+# CSS Styling - Rensad från blå klick-markeringar/fokusramar
 st.markdown("""
     <style>
+    /* Ta bort blå markeringar/fokusramar vid klick på alla element */
+    *:focus, button:focus, [tabindex]:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
     /* Bakgrund */
     .main { background-color: #f1f5f9; }
     
@@ -119,6 +125,10 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
+    .stTabs [data-baseweb="tab"]:focus {
+        outline: none !important;
+    }
+
     .stTabs [aria-selected="true"] { 
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; 
         color: #ffffff !important; 
@@ -169,7 +179,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Navigation via 4 Flikar utan emojis
+# Navigation via 4 Flikar
 tab1, tab2, tab3, tab4 = st.tabs(["Sverigekarta", "Stadsanalys", "Ekonomi & Payback", "CO₂ & Klimatnytta"])
 
 today = datetime.now()
@@ -446,4 +456,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.1 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.2 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
