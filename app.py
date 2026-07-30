@@ -30,13 +30,6 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-ZON_DETAILS = {
-    "SE1": {"lat": 66.0, "lon": 19.0, "namn": "SE1 – Norra Sverige", "farg": "#3b82f6", "beskrivning": "Luleå, Kiruna, Skellefteå"},
-    "SE2": {"lat": 62.8, "lon": 16.5, "namn": "SE2 – Norra Mellansverige", "farg": "#10b981", "beskrivning": "Sundsvall, Umeå, Östersund"},
-    "SE3": {"lat": 59.3, "lon": 15.0, "namn": "SE3 – Södra Mellansverige", "farg": "#f59e0b", "beskrivning": "Stockholm, Göteborg, Uppsala"},
-    "SE4": {"lat": 56.5, "lon": 14.0, "namn": "SE4 – Södra Sverige", "farg": "#ef4444", "beskrivning": "Malmö, Helsingborg, Växjö"}
-}
-
 # CSS Styling
 st.markdown("""
     <style>
@@ -105,7 +98,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Navigation via 4 Flikar
-tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Klickbar Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
+tab1, tab2, tab3, tab4 = st.tabs(["🗺️ Sverigekarta", "📊 Stadsanalys", "☀️ Ekonomi & Payback", "🌱 CO₂ & Klimatnytta"])
 
 today = datetime.now()
 
@@ -119,11 +112,11 @@ def hamta_zon_data(zon_kod):
         return None
 
 # ==========================================
-# FLIK 1: KLICKBAR SVERIGEKARTA
+# FLIK 1: SVERIGEKARTA MED REGIONSGRÄNSER
 # ==========================================
 with tab1:
-    st.markdown("### 🗺️ Interaktiv Elpriskarta över Sverige")
-    st.write("👉 **Klicka på cirklarna eller markörerna på kartan** för att se dagsaktuella priser, högsta/lägsta timpris och ingående städer.")
+    st.markdown("### 🗺️ Interaktiv Elpriskarta över Sveriges Elområden")
+    st.write("👉 **Klicka eller för musen över regionerna** för att se priser och städer per elområde.")
 
     zon_stats = {}
     for z_kod in ["SE1", "SE2", "SE3", "SE4"]:
@@ -159,43 +152,63 @@ with tab1:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Skapa interaktiv Folium-karta
-        m = folium.Map(location=[62.5, 16.5], zoom_start=4.8, tiles="cartodbpositron")
+        # Skapa Folium-karta centrerad över Sverige
+        m = folium.Map(location=[62.5, 16.5], zoom_start=5.0, tiles="cartodbpositron")
 
-        # Lägg till klickbara cirklar och markörer för varje elområde
-        for z_kod, z_info in ZON_DETAILS.items():
+        # Koordinatgränser för Sveriges fyra elområdesregioner
+        REGION_POLYGONER = {
+            "SE1": {
+                "farg": "#3b82f6",
+                "coords": [[65.0, 14.0], [69.0, 20.5], [68.8, 24.0], [65.7, 24.2], [65.0, 21.0], [65.0, 14.0]],
+                "namn": "SE1 – Norra Sverige",
+                "stader": "Luleå, Kiruna, Boden, Piteå, Skellefteå"
+            },
+            "SE2": {
+                "farg": "#10b981",
+                "coords": [[60.6, 12.0], [65.0, 14.0], [65.0, 21.0], [63.6, 20.0], [60.6, 17.5], [60.6, 12.0]],
+                "namn": "SE2 – Norra Mellansverige",
+                "stader": "Sundsvall, Umeå, Östersund, Gävle, Härnösand"
+            },
+            "SE3": {
+                "farg": "#f59e0b",
+                "coords": [[57.3, 11.0], [60.6, 12.0], [60.6, 17.5], [59.8, 19.5], [57.3, 17.0], [57.3, 11.0]],
+                "namn": "SE3 – Södra Mellansverige",
+                "stader": "Stockholm, Göteborg, Uppsala, Västerås, Örebro"
+            },
+            "SE4": {
+                "farg": "#ef4444",
+                "coords": [[55.3, 12.5], [57.3, 11.0], [57.3, 17.0], [56.2, 16.5], [55.3, 14.3], [55.3, 12.5]],
+                "namn": "SE4 – Södra Sverige",
+                "stader": "Malmö, Helsingborg, Lund, Växjö, Karlskrona"
+            }
+        }
+
+        # Rita ut färgade regionytor på kartan
+        for z_kod, reg in REGION_POLYGONER.items():
             stats = zon_stats[z_kod]
             popup_html = f"""
-                <div style="font-family: Arial, sans-serif; width: 220px;">
-                    <h4 style="margin:0 0 5px 0; color:{z_info['farg']};">{z_info['namn']}</h4>
+                <div style="font-family: Arial, sans-serif; width: 220px; padding: 4px;">
+                    <h4 style="margin:0 0 6px 0; color:{reg['farg']};">{reg['namn']}</h4>
                     <p style="margin:2px 0;"><b>Medelpris idag:</b> {stats['snitt']:.2f} kr/kWh</p>
-                    <p style="margin:2px 0;"><b>Högsta timpris:</b> {stats['max']:.2f} kr/kWh</p>
-                    <p style="margin:2px 0;"><b>Lägsta timpris:</b> {stats['min']:.2f} kr/kWh</p>
-                    <hr style="margin:8px 0; border:0; border-top:1px solid #ccc;">
-                    <small style="color:#666;"><b>Städer:</b> {z_info['beskrivning']}</small>
+                    <p style="margin:2px 0; color:#ef4444;"><b>Högsta timpris:</b> {stats['max']:.2f} kr/kWh</p>
+                    <p style="margin:2px 0; color:#10b981;"><b>Lägsta timpris:</b> {stats['min']:.2f} kr/kWh</p>
+                    <hr style="margin:6px 0; border:0; border-top:1px solid #e2e8f0;">
+                    <small style="color:#64748b;"><b>Ingående städer:</b><br>{reg['stader']}</small>
                 </div>
             """
 
-            # Cirkelområde
-            folium.Circle(
-                location=[z_info["lat"], z_info["lon"]],
-                radius=110000,
-                color=z_info["farg"],
+            folium.Polygon(
+                locations=reg["coords"],
+                color=reg["farg"],
+                weight=3,
                 fill=True,
-                fill_color=z_info["farg"],
-                fill_opacity=0.35,
-                tooltip=f"Klicka för priser i {z_kod}"
+                fill_color=reg["farg"],
+                fill_opacity=0.45,
+                popup=folium.Popup(popup_html, max_width=250),
+                tooltip=f"⚡ {reg['namn']} — Medelpris: {stats['snitt']:.2f} kr/kWh (Klicka för detaljer)"
             ).add_to(m)
 
-            # Markör
-            folium.Marker(
-                location=[z_info["lat"], z_info["lon"]],
-                popup=folium.Popup(popup_html, max_width=260),
-                tooltip=f"⚡ {z_kod}: {stats['snitt']:.2f} kr/kWh"
-            ).add_to(m)
-
-        # Visning i Streamlit
-        st_folium(m, width="100%", height=520)
+        st_folium(m, width="100%", height=540)
 
     else:
         st.warning("Kunde inte hämta kartdata just nu.")
@@ -364,4 +377,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.7 • Utvecklad med Python & Streamlit • Klickbar Sverigekarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 1.8 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
