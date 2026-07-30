@@ -204,12 +204,22 @@ def hamta_zon_data(zon_kod):
     except Exception:
         return None
 
+@st.cache_data(ttl=86400)
+def hamta_sverige_geojson():
+    # Hämtar exakt GeoJSON-gränsskikt för Sveriges elområden (SE1-SE4)
+    url = "https://raw.githubusercontent.com/electricitymaps/electricitymaps-contrib/master/config/zones/SE.geojson"
+    try:
+        res = requests.get(url, timeout=10)
+        return res.json() if res.status_code == 200 else None
+    except Exception:
+        return None
+
 # ==========================================
-# FLIK 1: SVERIGEKARTA MED REGIONSGRÄNSER
+# FLIK 1: EXAKT SVERIGEKARTA
 # ==========================================
 with tab1:
     st.markdown("### Interaktiv Elpriskarta över Sveriges Elområden")
-    st.write("Klicka eller för muspekaren över regionerna för att se aktuella priser och ingående städer per elområde.")
+    st.write("Klicka eller för muspekaren över regionerna för att se aktuella priser och detaljer per elområde.")
 
     zon_stats = {}
     for z_kod in ["SE1", "SE2", "SE3", "SE4"]:
@@ -246,58 +256,87 @@ with tab1:
 
         m = folium.Map(location=[62.5, 16.5], zoom_start=5.0, tiles="cartodbpositron")
 
-        REGION_POLYGONER = {
-            "SE1": {
-                "farg": "#3b82f6",
-                "coords": [[65.0, 14.0], [69.0, 20.5], [68.8, 24.0], [65.7, 24.2], [65.0, 21.0], [65.0, 14.0]],
-                "namn": "SE1 – Norra Sverige",
-                "stader": "Luleå, Kiruna, Boden, Piteå, Skellefteå"
-            },
-            "SE2": {
-                "farg": "#10b981",
-                "coords": [[60.6, 12.0], [65.0, 14.0], [65.0, 21.0], [63.6, 20.0], [60.6, 17.5], [60.6, 12.0]],
-                "namn": "SE2 – Norra Mellansverige",
-                "stader": "Sundsvall, Umeå, Östersund, Gävle, Härnösand"
-            },
-            "SE3": {
-                "farg": "#f59e0b",
-                "coords": [[57.3, 11.0], [60.6, 12.0], [60.6, 17.5], [59.8, 19.5], [57.3, 17.0], [57.3, 11.0]],
-                "namn": "SE3 – Södra Mellansverige",
-                "stader": "Stockholm, Göteborg, Uppsala, Västerås, Örebro"
-            },
-            "SE4": {
-                "farg": "#ef4444",
-                "coords": [[55.3, 12.5], [57.3, 11.0], [57.3, 17.0], [56.2, 16.5], [55.3, 14.3], [55.3, 12.5]],
-                "namn": "SE4 – Södra Sverige",
-                "stader": "Malmö, Helsingborg, Lund, Växjö, Karlskrona"
-            }
+        ZON_FARG = {
+            "SE1": "#3b82f6",
+            "SE2": "#10b981",
+            "SE3": "#f59e0b",
+            "SE4": "#ef4444"
         }
 
-        for z_kod, reg in REGION_POLYGONER.items():
+        STADER_PER_ZON = {
+            "SE1": "Luleå, Kiruna, Boden, Piteå, Skellefteå",
+            "SE2": "Sundsvall, Umeå, Östersund, Gävle, Härnösand",
+            "SE3": "Stockholm, Göteborg, Uppsala, Västerås, Örebro",
+            "SE4": "Malmö, Helsingborg, Lund, Växjö, Karlskrona"
+        }
+
+        geojson_data = hamta_sverige_geojson()
+
+        if geojson_data:
+            def style_function(feature):
+                # Identifiera elområdet från GeoJSON-egenskaperna
+                props = feature.get("properties", {})
+                zon_id = props.get("zoneKey", props.get("id", ""))
+                
+                # Matcha SE1, SE2, SE3, SE4
+                farg = "#64748b"
+                for z_kod, c in ZON_FARG.items():
+                    if z_kod in zon_id:
+                        farg = c
+                        break
+
+                return {
+                    "fillColor": farg,
+                    "color": "#ffffff",
+                    "weight": 1.5,
+                    "fillOpacity": 0.5
+                }
+
+            # Lägg till GeoJSON-kartskiktet
+            folium.GeoJson(
+                geojson_data,
+                style_function=style_function,
+                tooltip=folium.GeoJsonTooltip(
+                    fields=["zoneKey"],
+                    aliases=["Elområde:"],
+                    style="font-family: Arial; font-size: 12px; padding: 4px;"
+                )
+            ).add_to(m)
+
+        # Lägg till klickbara centrerade informationsmarkörer per elområde
+        CENTRA_KOORDINATER = {
+            "SE1": [66.3, 19.5],
+            "SE2": [63.2, 16.5],
+            "SE3": [59.4, 15.2],
+            "SE4": [56.3, 14.0]
+        }
+
+        for z_kod, coords in CENTRA_KOORDINATER.items():
             stats = zon_stats[z_kod]
+            farg = ZON_FARG[z_kod]
             popup_html = f"""
                 <div style="font-family: Arial, sans-serif; width: 220px; padding: 4px;">
-                    <h4 style="margin:0 0 6px 0; color:{reg['farg']};">{reg['namn']}</h4>
+                    <h4 style="margin:0 0 6px 0; color:{farg};">{z_kod} – Elområde</h4>
                     <p style="margin:2px 0;"><b>Medelpris idag:</b> {stats['snitt']:.2f} kr/kWh</p>
                     <p style="margin:2px 0; color:#ef4444;"><b>Högsta timpris:</b> {stats['max']:.2f} kr/kWh</p>
                     <p style="margin:2px 0; color:#10b981;"><b>Lägsta timpris:</b> {stats['min']:.2f} kr/kWh</p>
                     <hr style="margin:6px 0; border:0; border-top:1px solid #e2e8f0;">
-                    <small style="color:#64748b;"><b>Ingående städer:</b><br>{reg['stader']}</small>
+                    <small style="color:#64748b;"><b>Städer:</b><br>{STADER_PER_ZON[z_kod]}</small>
                 </div>
             """
 
-            folium.Polygon(
-                locations=reg["coords"],
-                color=reg["farg"],
-                weight=3,
+            folium.CircleMarker(
+                location=coords,
+                radius=14,
+                color=farg,
                 fill=True,
-                fill_color=reg["farg"],
-                fill_opacity=0.45,
+                fill_color="#ffffff",
+                fill_opacity=0.9,
                 popup=folium.Popup(popup_html, max_width=250),
-                tooltip=f"{reg['namn']} — Medelpris: {stats['snitt']:.2f} kr/kWh"
+                tooltip=f"{z_kod}: {stats['snitt']:.2f} kr/kWh (Klicka för info)"
             ).add_to(m)
 
-        st_folium(m, width="100%", height=540)
+        st_folium(m, width="100%", height=560)
 
     else:
         st.warning("Kunde inte hämta kartdata just nu.")
@@ -467,4 +506,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.2 • Utvecklad med Python & Streamlit • Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.3 • Utvecklad med Python & Streamlit • Exakt GeoJSON Regionkarta, Ekonomi & CO₂-analys.</div>', unsafe_allow_html=True)
