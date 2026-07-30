@@ -11,15 +11,33 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Kartläggning från Svenska Städer till Elområden (SE1 - SE4)
+STAD_TILL_ELOMRADE = {
+    # SE1 - Norra Sverige
+    "Luleå": "SE1", "Kiruna": "SE1", "Gällivare": "SE1", "Boden": "SE1", "Piteå": "SE1", 
+    "Skellefteå": "SE1", "Jokkmokk": "SE1", "Haparanda": "SE1", "Kalix": "SE1", "Arvidsjaur": "SE1",
+
+    # SE2 - Norra Mellansverige
+    "Sundsvall": "SE2", "Umeå": "SE2", "Östersund": "SE2", "Gävle": "SE2", "Härnösand": "SE2", 
+    "Örnsköldsvik": "SE2", "Hudiksvall": "SE2", "Söderhamn": "SE2", "Bollnäs": "SE2", "Åre": "SE2",
+
+    # SE3 - Södra Mellansverige
+    "Stockholm": "SE3", "Göteborg": "SE3", "Uppsala": "SE3", "Västerås": "SE3", "Örebro": "SE3", 
+    "Linköping": "SE3", "Norrköping": "SE3", "Jönköping": "SE3", "Karlstad": "SE3", "Borås": "SE3", 
+    "Eskilstuna": "SE3", "Halmstad": "SE3", "Trollhättan": "SE3", "Skövde": "SE3", "Uddevalla": "SE3", 
+    "Nyköping": "SE3", "Motala": "SE3", "Visby / Gotland": "SE3", "Falun": "SE3", "Borlänge": "SE3",
+
+    # SE4 - Södra Sverige
+    "Malmö": "SE4", "Helsingborg": "SE4", "Lund": "SE4", "Kristianstad": "SE4", "Växjö": "SE4", 
+    "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Landskrona": "SE4", "Ängelholm": "SE4", 
+    "Trelleborg": "SE4", "Ronneby": "SE4", "Oskarshamn": "SE4", "Hässleholm": "SE4"
+}
+
 # Anpassad CSS för ett professionellt SaaS-gränssnitt
 st.markdown("""
     <style>
-    /* Bakgrundsfärg */
-    .main {
-        background-color: #f8fafc;
-    }
+    .main { background-color: #f8fafc; }
     
-    /* Header-banner */
     .main-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         padding: 2.2rem 2rem;
@@ -42,7 +60,6 @@ st.markdown("""
         margin: 0;
     }
     
-    /* KPI-Kort */
     .metric-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
@@ -74,7 +91,6 @@ st.markdown("""
         margin-top: 0.25rem;
     }
 
-    /* Flik-design */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         border-bottom: 2px solid #e2e8f0;
@@ -95,7 +111,6 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Info-ruta */
     .info-box {
         background-color: #eff6ff;
         border-left: 4px solid #3b82f6;
@@ -132,12 +147,21 @@ tab1, tab2 = st.tabs(["📊 Elpriser i Realtid", "☀️ Investeringskalkylator"
 # FLIK 1: ELPRISER I REALTID
 # ==========================================
 with tab1:
-    st.markdown("### 📊 Dagsaktuella Timpriser")
+    st.markdown("### 📊 Dagsaktuella Timpriser per Stad/Kommun")
     
-    col_sel, _ = st.columns([1, 2])
-    with col_sel:
-        elomrade = st.selectbox("Välj Elområde:", ["SE1 (Luleå)", "SE2 (Sundsvall)", "SE3 (Stockholm)", "SE4 (Malmö)"], index=2)
-        zon = elomrade.split(" ")[0]
+    col_sel1, col_sel2 = st.columns(2)
+    
+    with col_sel1:
+        valdv_stad = st.selectbox(
+            "📍 Välj din Stad / Kommun:", 
+            options=sorted(list(STAD_TILL_ELOMRADE.keys())),
+            index=sorted(list(STAD_TILL_ELOMRADE.keys())).index("Stockholm")
+        )
+        zon = STAD_TILL_ELOMRADE[valdv_stad]
+
+    with col_sel2:
+        st.write("") # Mellanrum
+        st.info(f"📍 **{valdv_stad}** tillhör elområde **{zon}**")
 
     today = datetime.now()
     url = f"https://www.elprisetjustnu.se/api/v1/prices/{today.strftime('%Y')}/{today.strftime('%m-%d')}_{zon}.json"
@@ -166,9 +190,9 @@ with tab1:
         with c1:
             st.markdown(f"""
                 <div class="metric-card">
-                    <div class="metric-label">Medelpris Idag</div>
+                    <div class="metric-label">Medelpris Idag ({valdv_stad})</div>
                     <div class="metric-value">{snitt_pris:.2f} kr</div>
-                    <div class="metric-subtext">per kWh (exkl. nät)</div>
+                    <div class="metric-subtext">per kWh (exkl. nät & skatt)</div>
                 </div>
             """, unsafe_allow_html=True)
         with c2:
@@ -189,7 +213,7 @@ with tab1:
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📈 Prisvariation över dygnet (SEK/kWh)")
+        st.subheader(f"📈 Prisvariation i {valdv_stad} idag (SEK/kWh)")
         
         chart_data = df.set_index("Timme")[["SEK_per_kWh"]]
         st.line_chart(chart_data, height=350, use_container_width=True)
@@ -201,7 +225,7 @@ with tab1:
         """, unsafe_allow_html=True)
 
     else:
-        st.warning("Går inte att hämta live-data från elmarknaden just nu. Kontrollera anslutningen.")
+        st.warning("Går inte att hämta live-data från elmarknaden just nu.")
 
 # ==========================================
 # FLIK 2: INVESTERINGSKALKYLATOR
@@ -293,6 +317,6 @@ with tab2:
 # Footer
 st.markdown("""
     <div class="disclaimer-text">
-        EnergyIQ Version 1.2 • Utvecklad med Python & Streamlit • Data från Elprisetjustnu / Nord Pool • Kalkylen är indikativ.
+        EnergyIQ Version 1.3 • Utvecklad med Python & Streamlit • Data från Elprisetjustnu / Nord Pool • Kalkylen är indikativ.
     </div>
 """, unsafe_allow_html=True)
