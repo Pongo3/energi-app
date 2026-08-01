@@ -159,24 +159,49 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
+    /* B2B Contact Card */
+    .b2b-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #cbd5e1;
+        border-left: 6px solid #2563eb;
+        border-radius: 14px;
+        padding: 1.8rem 2rem;
+        margin-top: 3rem;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+
+    .b2b-card h3 {
+        color: #0f172a !important;
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .b2b-card p {
+        color: #475569;
+        font-size: 0.98rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
     .disclaimer-text { 
         font-size: 0.82rem; 
         color: #94a3b8; 
         text-align: center; 
-        margin-top: 3.5rem; 
+        margin-top: 2.5rem; 
         padding-top: 1.2rem; 
         border-top: 1px solid #e2e8f0; 
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Funktion för att skapa snygga PDF-rapporter
+# Funktion för att skapa PDF-rapporter
 def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, kostnad_sol, kostnad_batteri, total_investering, elpris_snitt, elpris_inflation, effekt_kapat_kw, effekt_taxa_kr_kw, payback_str, besparing_ar1, nettonytta_25ar):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # Header Banner (Mörkblå)
+    # Header Banner
     c.setFillColor(colors.HexColor("#0f172a"))
     c.rect(0, height - 100, width, 100, fill=1, stroke=0)
 
@@ -187,7 +212,7 @@ def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, 
     c.setFont("Helvetica", 11)
     c.drawString(40, height - 70, f"Genererad: {datetime.now().strftime('%Y-%m-%d %H:%M')} | Licensierad Energimodell")
 
-    # Sektion 1: Teknisk Specifikation
+    # Sektion 1: Specifikation
     y = height - 140
     c.setFillColor(colors.HexColor("#0f172a"))
     c.setFont("Helvetica-Bold", 14)
@@ -201,7 +226,7 @@ def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, 
     c.setFillColor(colors.HexColor("#334155"))
     
     spec_rader = [
-        f"• Installed Solcellseffekt: {effekt_kw} kWp",
+        f"• Installerad Solcellseffekt: {effekt_kw} kWp",
         f"• Batterilagringskapacitet: {batteri_kwh} kWh",
         f"• Årlig degradering (Solceller / Batteri): {sol_degradering}% / {bat_degradering}%",
         f"• Investeringskostnad Solceller (efter avdrag): {kostnad_sol:,.0f} kr",
@@ -215,7 +240,7 @@ def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, 
         c.drawString(50, y, rad)
         y -= 18
 
-    # Sektion 2: Nyckeltal & Resultat
+    # Sektion 2: Resultat
     y -= 20
     c.setFillColor(colors.HexColor("#0f172a"))
     c.setFont("Helvetica-Bold", 14)
@@ -223,7 +248,6 @@ def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, 
     c.line(40, y - 5, width - 40, y - 5)
 
     y -= 35
-    # Resultatrutor (Kort)
     c.setFillColor(colors.HexColor("#f8fafc"))
     c.rect(40, y - 50, 160, 60, fill=1, stroke=1)
     c.rect(215, y - 50, 160, 60, fill=1, stroke=1)
@@ -245,16 +269,14 @@ def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, 
     c.setFillColor(colors.HexColor("#10b981"))
     c.drawString(400, y - 25, f"{nettonytta_25ar:,.0f} kr")
 
-    # Metodfriskrivning
     y -= 100
     c.setFillColor(colors.HexColor("#64748b"))
     c.setFont("Helvetica-Oblique", 8)
     c.drawString(40, y, "* Kalkylen baseras på schabloniserade beräkningar för solproduktion, effekttariffer och årlig degradering.")
     c.drawString(40, y - 12, "  Faktiskt utfall kan variera beroende på lokala väderförhållanden, elnätsavtal samt framtida elprisutveckling.")
 
-    # Footer
     c.setFont("Helvetica", 9)
-    c.drawString(40, 30, "EnergyIQ Platform • Ingenjörsmässig Energimodellering • www.energyiq.se")
+    c.drawString(40, 30, "EnergyIQ Platform • Ingenjörsmässig Energimodellering")
 
     c.showPage()
     c.save()
@@ -466,175 +488,4 @@ with tab3:
         har_batteri = st.checkbox("Inkludera Batteri", value=True)
         if har_batteri:
             batteri_kwh = st.number_input("Batterikapacitet (kWh):", min_value=1.0, max_value=50.0, value=10.0, step=1.0)
-            kostnad_batteri = st.number_input("Kostnad batteri (kr e. avdrag):", value=50000, step=5000)
-            bat_degradering = st.slider("Årlig batteridegradering (%):", 0.5, 3.0, 1.5, step=0.1, help="Batterier tappar ca 1.5% kapacitet per år.")
-        else:
-            batteri_kwh, kostnad_batteri, bat_degradering = 0, 0, 0.0
-
-    with col_in3:
-        st.markdown("#### 3. Elpris & Effekttarrif")
-        elpris_snitt = st.number_input("Förväntat elpris inkl. skatt (kr/kWh):", value=1.8, step=0.1)
-        elpris_inflation = st.slider("Årlig elprisökning / inflation (%):", 0.0, 5.0, 2.0, step=0.5)
-        
-        har_effekttariff = st.checkbox("Inkludera Effekttariff-besparing", value=True, help="Många elnätbolag tar ut avgift baserat på månadens högsta effekttoppar (kr/kW/mån).")
-        if har_effekttariff and har_batteri:
-            effekt_kapat_kw = st.number_input("Uppskattad kapad effekttopp (kW):", min_value=0.5, max_value=20.0, value=4.0, step=0.5)
-            effekt_taxa_kr_kw = st.number_input("Elnätets effekttaxa (kr/kW/månad):", value=80.0, step=5.0)
-        else:
-            effekt_kapat_kw, effekt_taxa_kr_kw = 0, 0
-
-    # Dynamisk 25-års simuleringsmodell
-    livslangd_ar = 25
-    ar_lista = list(range(0, livslangd_ar + 1))
-    
-    ack_kassaflode = []
-    arliga_besparingar = []
-    
-    total_investering = kostnad_sol + kostnad_batteri
-    nuvarande_kassaflode = -total_investering
-    ack_kassaflode.append(nuvarande_kassaflode)
-    arliga_besparingar.append(0)
-
-    for ar in range(1, livslangd_ar + 1):
-        # Degraderingsfaktorer
-        sol_faktor = (1 - (sol_degradering / 100)) ** (ar - 1)
-        bat_faktor = (1 - (bat_degradering / 100)) ** (ar - 1) if har_batteri else 0
-        pris_faktor = (1 + (elpris_inflation / 100)) ** (ar - 1)
-        
-        # Produktion & elpris år X
-        prod_ar = (effekt_kw * 950) * sol_faktor
-        aktuellt_elpris = elpris_snitt * pris_faktor
-        
-        egen_sol = prod_ar * (egenanvandning_pct / 100)
-        sold_sol = prod_ar - egen_sol
-        
-        # Besparingar år X
-        besparing_sol = (egen_sol * aktuellt_elpris) + (sold_sol * 0.50)
-        besparing_batteri = (batteri_kwh * bat_faktor * 300 * 1.20) if har_batteri else 0
-        besparing_effekt = (effekt_kapat_kw * effekt_taxa_kr_kw * 12) if (har_effekttariff and har_batteri) else 0
-        
-        total_besparing_ar_x = besparing_sol + besparing_batteri + besparing_effekt
-        nuvarande_kassaflode += total_besparing_ar_x
-        
-        arliga_besparingar.append(total_besparing_ar_x)
-        ack_kassaflode.append(nuvarande_kassaflode)
-
-    # Payback-tid beräkning
-    payback_ar = 0
-    for idx, val in enumerate(ack_kassaflode):
-        if val >= 0:
-            payback_ar = idx
-            break
-    if payback_ar == 0 and ack_kassaflode[-1] < 0:
-        payback_str = "> 25 år"
-    else:
-        payback_str = f"{payback_ar} år"
-
-    st.markdown("---")
-    r1, r2, r3, r4 = st.columns(4)
-    with r1:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #2563eb;"><div class="metric-label">Besparing År 1</div><div class="metric-value" style="color:#10b981;">{arliga_besparingar[1]:,.0f} kr</div><div class="metric-subtext">inkl. effekttariff</div></div>', unsafe_allow_html=True)
-    with r2:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Total Vinst (25 År)</div><div class="metric-value" style="color:#10b981;">{ack_kassaflode[-1]:,.0f} kr</div><div class="metric-subtext">nettonytta</div></div>', unsafe_allow_html=True)
-    with r3:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #64748b;"><div class="metric-label">Total Investering</div><div class="metric-value">{total_investering:,.0f} kr</div><div class="metric-subtext">efter avdrag</div></div>', unsafe_allow_html=True)
-    with r4:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Realistisk Payback</div><div class="metric-value" style="color:#3b82f6;">{payback_str}</div><div class="metric-subtext">med degradering</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("📈 Ackumulerat Kassaflöde & Investeringsresa (25 År)")
-    df_cf = pd.DataFrame({"Ackumulerat Kassaflöde (kr)": ack_kassaflode}, index=ar_lista)
-    st.line_chart(df_cf, height=350, use_container_width=True)
-
-    # PDF-generering
-    st.markdown("---")
-    st.subheader("📄 Generera Professionell PDF-Investeringsrapport")
-    
-    pdf_buffer = skape_pdf_rapport(
-        effekt_kw, batteri_kwh, sol_degradering, bat_degradering,
-        kostnad_sol, kostnad_batteri, total_investering, elpris_snitt,
-        elpris_inflation, effekt_kapat_kw, effekt_taxa_kr_kw,
-        payback_str, arliga_besparingar[1], ack_kassaflode[-1]
-    )
-
-    st.download_button(
-        label="📥 Ladda ner Investeringsrapport som PDF",
-        data=pdf_buffer,
-        file_name=f"EnergyIQ_Rapport_{datetime.now().strftime('%Y%m%d')}.pdf",
-        mime="application/pdf"
-    )
-
-# ==========================================
-# FLIK 4: CO2 OCH KLIMATNYTTA
-# ==========================================
-with tab4:
-    st.markdown("### Klimatberäkning & Utsläppsminskning (CO₂e)")
-    c_co1, c_co2 = st.columns(2)
-    with c_co1:
-        effekt_kw_co2 = st.number_input("Installerad solcellseffekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_co2")
-        jamforelse_kraft = st.selectbox(
-            "Jämför mot ersatt energikälla (Marginalel):",
-            ["Europeisk Marginalel (Kol/Gas ~ 400 g/kWh)", "Nordisk Mix (~ 120 g/kWh)", "Svenskt Elnät (~ 45 g/kWh)", "Kolkraft (~ 900 g/kWh)"]
-        )
-
-    with c_co2:
-        anlaggning_livslangd = st.slider("Anläggningens livslängd (År):", 10, 30, 25)
-
-    CO2_FAKTORER = {
-        "Europeisk Marginalel (Kol/Gas ~ 400 g/kWh)": 400,
-        "Nordisk Mix (~ 120 g/kWh)": 120,
-        "Svenskt Elnät (~ 45 g/kWh)": 45,
-        "Kolkraft (~ 900 g/kWh)": 900
-    }
-
-    val_g_co2 = CO2_FAKTORER[jamforelse_kraft]
-    prod_ar_kwh = effekt_kw_co2 * 950
-    netto_sparad_co2_g_kwh = max(0, val_g_co2 - 40)
-    
-    co2_sparad_ar_ton = (prod_ar_kwh * netto_sparad_co2_g_kwh) / 1_000_000
-    co2_sparad_total_ton = co2_sparad_ar_ton * anlaggning_livslangd
-
-    bensin_mil = co2_sparad_total_ton * 650
-    antal_trad = co2_sparad_total_ton * 50
-
-    st.markdown("---")
-    st.markdown("### Uppskattad Klimatnytta")
-
-    k1, k2, k3 = st.columns(3)
-    with k1:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Årlig CO₂-Inbesparing</div><div class="metric-value" style="color: #10b981;">{co2_sparad_ar_ton:.2f} ton</div><div class="metric-subtext">CO₂e per år</div></div>', unsafe_allow_html=True)
-    with k2:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Total CO₂-Minskning ({anlaggning_livslangd} år)</div><div class="metric-value" style="color: #10b981;">{co2_sparad_total_ton:.1f} ton</div><div class="metric-subtext">nettoinbesparing</div></div>', unsafe_allow_html=True)
-    with k3:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Klimatskuld Betald efter</div><div class="metric-value" style="color: #3b82f6;">1.8 år</div><div class="metric-subtext">Energetisk återbetalningstid</div></div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Vad motsvarar koldioxidminskningen?")
-    
-    e1, e2 = st.columns(2)
-    with e1:
-        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;"><b>Motsvarar Bensinbil:</b> ca <b>{bensin_mil:,.0f} mil</b> i körsträcka med en normal bensinbil över {anlaggning_livslangd} år.</div>', unsafe_allow_html=True)
-    with e2:
-        st.markdown(f'<div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4; color: #166534;"><b>Motsvarar Trädplantering:</b> ca <b>{antal_trad:,.0f} växande träd</b> som binder koldioxid i 10 år.</div>', unsafe_allow_html=True)
-
-    st.markdown("""
-        <div class="disclaimer-box">
-            <b>Metod, Avgränsning & LCA-Disclaimer:</b><br>
-            • <b>Vad som ingår i kalkylen:</b> Kalkylen baseras på en schabloniserad Livscykelanalys (LCA) där solcellernas tillverkning beräknas generera <b>~40 g CO₂e/kWh</b> under sin livslängd.<br>
-            • <b>Vad som INTE ingår:</b> Specifik transportsträcka från tillverkningsland, utsläpp kopplade till montering på plats, växelriktares utbyte samt sluthantering/återvinning.<br>
-            • <i>Kalkylen är indikativ och utformad för att ge ett pedagogiskt beslutsunderlag.</i>
-        </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("CO₂-utsläpp per kWh för olika Energikällor (g CO₂e/kWh)")
-    
-    df_co2_comp = pd.DataFrame({
-        "Energikälla": ["Kolkraft", "Naturgas", "Solceller (Tillverkning)", "Vattenkraft", "Kärnkraft"],
-        "Gram CO2 per kWh": [820, 490, 40, 24, 12]
-    }).set_index("Energikälla")
-
-    st.bar_chart(df_co2_comp, height=350, use_container_width=True)
-
-# Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.1 • Utvecklad med Python & Streamlit • Med inbyggd PDF-rapportgenerering.</div>', unsafe_allow_html=True)
+            kostnad_batteri = st.number_input("Kostnad
