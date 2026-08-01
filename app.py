@@ -30,29 +30,21 @@ STAD_TILL_ELOMRADE = {
     "Karlskrona": "SE4", "Kalmar": "SE4", "Ystad": "SE4", "Hässleholm": "SE4"
 }
 
-# CSS Styling - Rensad från blå underlinjer, fokusramar och klick-markeringar
+# CSS Styling
 st.markdown("""
     <style>
-    /* Ta bort Streamlits animerade underlinjer och tab-borders */
-    div[data-baseweb="tab-highlight"] {
-        display: none !important;
-        background-color: transparent !important;
-    }
-    div[data-baseweb="tab-border"] {
+    div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"] {
         display: none !important;
     }
 
-    /* Ta bort blå fokusramar och markeringar i hela appen */
     *:focus, button:focus, [tabindex]:focus, div:focus {
         outline: none !important;
         box-shadow: none !important;
         border-color: transparent !important;
     }
     
-    /* Bakgrund */
     .main { background-color: #f1f5f9; }
     
-    /* Header Banner */
     .main-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
         padding: 2.5rem 2.2rem;
@@ -78,7 +70,6 @@ st.markdown("""
         font-weight: 500;
     }
     
-    /* Metric Cards */
     .metric-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -116,7 +107,6 @@ st.markdown("""
         margin-top: 0.3rem; 
     }
 
-    /* Stora stilrena Flikknappar */
     .stTabs [data-baseweb="tab-list"] { 
         gap: 12px; 
         border-bottom: 2px solid #cbd5e1; 
@@ -135,11 +125,6 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
 
-    .stTabs [data-baseweb="tab"]:focus, .stTabs [data-baseweb="tab"]:active {
-        outline: none !important;
-        border-color: #cbd5e1 !important;
-    }
-
     .stTabs [aria-selected="true"] { 
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important; 
         color: #ffffff !important; 
@@ -147,7 +132,6 @@ st.markdown("""
         box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3) !important;
     }
 
-    /* Informationsrutor */
     .info-box {
         background-color: #eff6ff;
         border-left: 5px solid #2563eb;
@@ -186,12 +170,12 @@ st.markdown("""
 st.markdown("""
     <div class="main-header">
         <h1>EnergyIQ Platform</h1>
-        <p>Digital energianalys, interaktiv elområdeskarta över Sverige, ekonomi- & CO₂-kalkylatorer.</p>
+        <p>Avancerad energianalys, elområdeskarta, effekttariffer & degraderingsmodellering.</p>
     </div>
 """, unsafe_allow_html=True)
 
 # Navigation via 4 Flikar
-tab1, tab2, tab3, tab4 = st.tabs(["Sverigekarta", "Stadsanalys", "Ekonomi & Payback", "CO₂ & Klimatnytta"])
+tab1, tab2, tab3, tab4 = st.tabs(["Sverigekarta", "Stadsanalys", "Avancerad Ekonomi & ROI", "CO₂ & Klimatnytta"])
 
 today = datetime.now()
 
@@ -361,92 +345,152 @@ with tab2:
         st.line_chart(chart_data, height=350, use_container_width=True)
 
 # ==========================================
-# FLIK 3: EKONOMI & PAYBACK
+# FLIK 3: AVANCERAD EKONOMI, EFFEKTTAXA & DEGRADERING
 # ==========================================
 with tab3:
-    st.markdown("### Investeringskalkylator (Solceller & Batterilagring)")
-    st.caption("Håll muspekaren över frågetecken-ikonerna (?) för att se förklaringar av beräkningarna.")
+    st.markdown("### Avancerad Investeringskalkylator (20–25 Års Livscykelmodell)")
+    st.caption("Modellen tar hänsyn till solcellers och batteriers årliga degradering samt besparing via effekttariffer (peak shaving).")
     
-    col_in1, col_in2 = st.columns(2)
+    col_in1, col_in2, col_in3 = st.columns(3)
     with col_in1:
+        st.markdown("#### 1. Solcellsanläggning")
         effekt_kw = st.number_input(
-            "Installerad effekt (kWp):", 
-            min_value=1.0, max_value=100.0, value=10.0, step=0.5, key="kw_ekonomi",
-            help="Solcellsanläggningens maximala toppeffekt i kilowatt-peak (kWp) under ideala förhållanden. Normalt ger 1 kWp ca 950 kWh el per år i Sverige."
+            "Installerad effekt (kWp):", min_value=1.0, max_value=100.0, value=10.0, step=0.5,
+            help="Toppeffekt i kWp. Schablonen ger ~950 kWh/kWp år 1."
         )
-        
         kostnad_sol = st.number_input(
-            "Investeringskostnad solceller (kr e. avdrag):", 
-            value=100000, step=5000,
-            help="Den totala investeringskostnaden för solceller och växelriktare efter nyttjat Grön Teknik-skatteavdrag (20% på material & arbete)."
+            "Kostnad solceller (kr e. avdrag):", value=100000, step=5000,
+            help="Nettokostnad efter 20% Grön Teknik-avdrag."
         )
-        
-        egenanvandning_pct = st.slider(
-            "Egenanvänd el (%):", 
-            20, 80, 40,
-            help="Hur stor andel av din producerade solel som du förbrukar själv i fastigheten (t.ex. till hushållsel/laddbox). Resterande el säljs automatiskt ut på elnätet."
-        )
+        egenanvandning_pct = st.slider("Egenanvänd el (%):", 20, 80, 40)
+        sol_degradering = st.slider("Årlig solcellsdegradering (%):", 0.1, 1.5, 0.5, step=0.1, help="Standard är ~0.5% effekttapp per år.")
 
     with col_in2:
-        har_batteri = st.checkbox(
-            "Inkludera Batterilagring", 
-            value=True, key="bat_ekonomi",
-            help="Bocka i om du vill beräkna investeringen tillsammans med ett hembatteri för energilagring."
-        )
-        
+        st.markdown("#### 2. Batterilagring")
+        har_batteri = st.checkbox("Inkludera Batteri", value=True)
         if har_batteri:
-            batteri_kwh = st.number_input(
-                "Batterikapacitet (kWh):", 
-                min_value=1.0, max_value=50.0, value=10.0, step=1.0,
-                help="Batteriets lagringskapacitet i kilowattimmar (kWh). Gör det möjligt att spara dagens solel till kvällens och nattens förbrukning."
-            )
-            
-            kostnad_batteri = st.number_input(
-                "Investeringskostnad batteri (kr e. avdrag):", 
-                value=50000, step=5000,
-                help="Nettoinvesteringen för batterilagring efter Grön Teknik-avdraget (som täcker upp till 50% av kostnaden för batterier)."
-            )
+            batteri_kwh = st.number_input("Batterikapacitet (kWh):", min_value=1.0, max_value=50.0, value=10.0, step=1.0)
+            kostnad_batteri = st.number_input("Kostnad batteri (kr e. avdrag):", value=50000, step=5000)
+            bat_degradering = st.slider("Årlig batteridegradering (%):", 0.5, 3.0, 1.5, step=0.1, help="Batterier tappar ca 1.5% kapacitet per år.")
         else:
-            batteri_kwh = 0
-            kostnad_batteri = 0
+            batteri_kwh, kostnad_batteri, bat_degradering = 0, 0, 0.0
 
-        elpris_snitt = st.number_input(
-            "Förväntat medel-elpris inkl. skatt (kr/kWh):", 
-            value=1.8, step=0.1,
-            help="Det uppskattade genomsnittliga elpriset inklusive elhandelspris, energiskatt, elöverföring och moms över anläggningens livslängd."
-        )
+    with col_in3:
+        st.markdown("#### 3. Elpris & Effekttarrif")
+        elpris_snitt = st.number_input("Förväntat elpris inkl. skatt (kr/kWh):", value=1.8, step=0.1)
+        elpris_inflation = st.slider("Årlig elprisökning / inflation (%):", 0.0, 5.0, 2.0, step=0.5)
+        
+        har_effekttariff = st.checkbox("Inkludera Effekttariff-besparing", value=True, help="Många elnätbolag tar ut avgift baserat på månadens högsta effekttoppar (kr/kW/mån).")
+        if har_effekttariff and har_batteri:
+            effekt_kapat_kw = st.number_input("Uppskattad kapad effekttopp (kW):", min_value=0.5, max_value=20.0, value=4.0, step=0.5)
+            effekt_taxa_kr_kw = st.number_input("Elnätets effekttaxa (kr/kW/månad):", value=80.0, step=5.0)
+        else:
+            effekt_kapat_kw, effekt_taxa_kr_kw = 0, 0
 
-    # Beräkningar
-    produktion_ar = effekt_kw * 950  
-    egen_sol = produktion_ar * (egenanvandning_pct / 100)
-    sold_sol = produktion_ar - egen_sol
-
-    besparing_sol = (egen_sol * elpris_snitt) + (sold_sol * 0.50)
-    besparing_batteri = (batteri_kwh * 300 * 1.20) if har_batteri else 0
-
-    total_besparing_ar = besparing_sol + besparing_batteri
+    # Dynamisk 25-års simuleringsmodell
+    livslangd_ar = 25
+    ar_lista = list(range(0, livslangd_ar + 1))
+    
+    ack_kassaflode = []
+    arliga_besparingar = []
+    
     total_investering = kostnad_sol + kostnad_batteri
-    payback_ar = total_investering / total_besparing_ar if total_besparing_ar > 0 else 0
+    nuvarande_kassaflode = -total_investering
+    ack_kassaflode.append(nuvarande_kassaflode)
+    arliga_besparingar.append(0)
+
+    for ar in range(1, livslangd_ar + 1):
+        # Degraderingsfaktorer
+        sol_faktor = (1 - (sol_degradering / 100)) ** (ar - 1)
+        bat_faktor = (1 - (bat_degradering / 100)) ** (ar - 1) if har_batteri else 0
+        pris_faktor = (1 + (elpris_inflation / 100)) ** (ar - 1)
+        
+        # Produktion & elpris år X
+        prod_ar = (effekt_kw * 950) * sol_faktor
+        aktuellt_elpris = elpris_snitt * pris_faktor
+        
+        egen_sol = prod_ar * (egenanvandning_pct / 100)
+        sold_sol = prod_ar - egen_sol
+        
+        # Besparingar år X
+        besparing_sol = (egen_sol * aktuellt_elpris) + (sold_sol * 0.50)
+        besparing_batteri = (batteri_kwh * bat_faktor * 300 * 1.20) if har_batteri else 0
+        besparing_effekt = (effekt_kapat_kw * effekt_taxa_kr_kw * 12) if (har_effekttariff and har_batteri) else 0
+        
+        total_besparing_ar_x = besparing_sol + besparing_batteri + besparing_effekt
+        nuvarande_kassaflode += total_besparing_ar_x
+        
+        arliga_besparingar.append(total_besparing_ar_x)
+        ack_kassaflode.append(nuvarande_kassaflode)
+
+    # Payback-tid beräkning
+    payback_ar = 0
+    for idx, val in enumerate(ack_kassaflode):
+        if val >= 0:
+            payback_ar = idx
+            break
+    if payback_ar == 0 and ack_kassaflode[-1] < 0:
+        payback_str = "> 25 år"
+    else:
+        payback_str = f"{payback_ar} år"
 
     st.markdown("---")
     r1, r2, r3, r4 = st.columns(4)
     with r1:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #2563eb;"><div class="metric-label">Årlig Produktion</div><div class="metric-value">{produktion_ar:,.0f}</div><div class="metric-subtext">kWh / år</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #2563eb;"><div class="metric-label">Besparing År 1</div><div class="metric-value" style="color:#10b981;">{arliga_besparingar[1]:,.0f} kr</div><div class="metric-subtext">inkl. effekttariff</div></div>', unsafe_allow_html=True)
     with r2:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Årlig Besparing</div><div class="metric-value" style="color: #10b981;">{total_besparing_ar:,.0f} kr</div><div class="metric-subtext">per år</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #10b981;"><div class="metric-label">Total Vinst (25 År)</div><div class="metric-value" style="color:#10b981;">{ack_kassaflode[-1]:,.0f} kr</div><div class="metric-subtext">nettonytta</div></div>', unsafe_allow_html=True)
     with r3:
         st.markdown(f'<div class="metric-card" style="border-top: 5px solid #64748b;"><div class="metric-label">Total Investering</div><div class="metric-value">{total_investering:,.0f} kr</div><div class="metric-subtext">efter avdrag</div></div>', unsafe_allow_html=True)
     with r4:
-        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Payback-tid</div><div class="metric-value" style="color: #3b82f6;">{payback_ar:.1f} år</div><div class="metric-subtext">Återbetalningstid</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card" style="border-top: 5px solid #3b82f6;"><div class="metric-label">Realistisk Payback</div><div class="metric-value" style="color:#3b82f6;">{payback_str}</div><div class="metric-subtext">med degradering</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Ackumulerat Kassaflöde över 15 år")
-    st.caption("Diagrammet visar din investeringsresa. När linjen passerar 0 kr har anläggningen betalat av sig själv och genererar ren vinst.")
-    
-    years = list(range(0, 16))
-    cashflow = [-total_investering + (yr * total_besparing_ar) for yr in years]
-    df_cf = pd.DataFrame({"Kassaflöde (kr)": cashflow}, index=years)
+    st.subheader("📈 Ackumulerat Kassaflöde & Investeringsresa (25 År)")
+    df_cf = pd.DataFrame({"Ackumulerat Kassaflöde (kr)": ack_kassaflode}, index=ar_lista)
     st.line_chart(df_cf, height=350, use_container_width=True)
+
+    # PDF/Rapport-generering
+    st.markdown("---")
+    st.subheader("📄 Generera Investeringsrapport")
+    
+    rapport_text = f"""
+==================================================
+ENERGYIQ - INVESTERINGSRAPPORT & TEKNISK KALKYL
+Datum: {datetime.now().strftime('%Y-%m-%d')}
+==================================================
+
+1. ANLÄGGNINGSSPECIFIKATION:
+--------------------------------------------------
+- Solcellseffekt: {effekt_kw} kWp
+- Batterikapacitet: {batteri_kwh} kWh
+- Årlig solcellsdegradering: {sol_degradering}%
+- Årlig batteridegradering: {bat_degradering}%
+
+2. EKONOMISKA PARAMETRAR:
+--------------------------------------------------
+- Investering Solceller (efter avdrag): {kostnad_sol:,.0f} kr
+- Investering Batteri (efter avdrag): {kostnad_batteri:,.0f} kr
+- Total Nettoinvestering: {total_investering:,.0f} kr
+- Förväntat medel-elpris: {elpris_snitt} kr/kWh (Inflation: {elpris_inflation}%/år)
+- Kapad effekttopp: {effekt_kapat_kw} kW (Effekttaxa: {effekt_taxa_kr_kw} kr/kW/mån)
+
+3. SIMULERINGSRESULTAT (25 ÅR):
+--------------------------------------------------
+- Beräknad återbetalningstid: {payback_str}
+- Årlig besparing År 1: {arliga_besparingar[1]:,.0f} kr
+- Total nettonytta efter 25 år: {ack_kassaflode[-1]:,.0f} kr
+
+==================================================
+EnergyIQ Platform • Ingenjörsmässig Energimodell
+==================================================
+"""
+    st.download_button(
+        label="📥 Ladda ner Sammanfattande Investeringsrapport (.txt)",
+        data=rapport_text,
+        file_name=f"EnergyIQ_Rapport_{datetime.now().strftime('%Y%m%d')}.txt",
+        mime="text/plain"
+    )
 
 # ==========================================
 # FLIK 4: CO2 OCH KLIMATNYTTA
@@ -521,4 +565,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 2.8 • Utvecklad med Python & Streamlit • Svensk täckning med live-data.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.0 • Utvecklad med Python & Streamlit • Avancerad livscykelkalkyl med effekttariffer & degradering.</div>', unsafe_allow_html=True)
