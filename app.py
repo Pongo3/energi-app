@@ -637,4 +637,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.1 • Utvecklad med Python & Streamlit • Med inbyggd PDF-rapportgenerering.</div>', unsafe_allow_html=True)
