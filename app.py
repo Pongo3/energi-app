@@ -4,6 +4,10 @@ import pandas as pd
 from datetime import datetime
 import folium
 from streamlit_folium import st_folium
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 
 # Sidkonfiguration
 st.set_page_config(
@@ -165,6 +169,98 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Funktion för att skapa snygga PDF-rapporter
+def skape_pdf_rapport(effekt_kw, batteri_kwh, sol_degradering, bat_degradering, kostnad_sol, kostnad_batteri, total_investering, elpris_snitt, elpris_inflation, effekt_kapat_kw, effekt_taxa_kr_kw, payback_str, besparing_ar1, nettonytta_25ar):
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # Header Banner (Mörkblå)
+    c.setFillColor(colors.HexColor("#0f172a"))
+    c.rect(0, height - 100, width, 100, fill=1, stroke=0)
+
+    # Titel
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 22)
+    c.drawString(40, height - 45, "EnergyIQ - Investeringsrapport")
+    c.setFont("Helvetica", 11)
+    c.drawString(40, height - 70, f"Genererad: {datetime.now().strftime('%Y-%m-%d %H:%M')} | Licensierad Energimodell")
+
+    # Sektion 1: Teknisk Specifikation
+    y = height - 140
+    c.setFillColor(colors.HexColor("#0f172a"))
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "1. Anläggningsspecifikation & Indata")
+    c.setStrokeColor(colors.HexColor("#cbd5e1"))
+    c.setLineWidth(1)
+    c.line(40, y - 5, width - 40, y - 5)
+
+    y -= 30
+    c.setFont("Helvetica", 10)
+    c.setFillColor(colors.HexColor("#334155"))
+    
+    spec_rader = [
+        f"• Installed Solcellseffekt: {effekt_kw} kWp",
+        f"• Batterilagringskapacitet: {batteri_kwh} kWh",
+        f"• Årlig degradering (Solceller / Batteri): {sol_degradering}% / {bat_degradering}%",
+        f"• Investeringskostnad Solceller (efter avdrag): {kostnad_sol:,.0f} kr",
+        f"• Investeringskostnad Batteri (efter avdrag): {kostnad_batteri:,.0f} kr",
+        f"• Total Nettoinvestering: {total_investering:,.0f} kr",
+        f"• Förväntat medel-elpris: {elpris_snitt} kr/kWh (Inflation: {elpris_inflation}%/år)",
+        f"• Kapad effekttopp: {effekt_kapat_kw} kW (Effekttaxa: {effekt_taxa_kr_kw} kr/kW/mån)"
+    ]
+
+    for rad in spec_rader:
+        c.drawString(50, y, rad)
+        y -= 18
+
+    # Sektion 2: Nyckeltal & Resultat
+    y -= 20
+    c.setFillColor(colors.HexColor("#0f172a"))
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "2. Ekonomiskt Resultat & Livscykelanalys (25 År)")
+    c.line(40, y - 5, width - 40, y - 5)
+
+    y -= 35
+    # Resultatrutor (Kort)
+    c.setFillColor(colors.HexColor("#f8fafc"))
+    c.rect(40, y - 50, 160, 60, fill=1, stroke=1)
+    c.rect(215, y - 50, 160, 60, fill=1, stroke=1)
+    c.rect(390, y - 50, 165, 60, fill=1, stroke=1)
+
+    c.setFillColor(colors.HexColor("#64748b"))
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(50, y, "ÅRLIG BESPARING (ÅR 1)")
+    c.drawString(225, y, "PAYBACK-TID")
+    c.drawString(400, y, "NETTONYTTA (25 ÅR)")
+
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(colors.HexColor("#10b981"))
+    c.drawString(50, y - 25, f"{besparing_ar1:,.0f} kr")
+    
+    c.setFillColor(colors.HexColor("#2563eb"))
+    c.drawString(225, y - 25, payback_str)
+    
+    c.setFillColor(colors.HexColor("#10b981"))
+    c.drawString(400, y - 25, f"{nettonytta_25ar:,.0f} kr")
+
+    # Metodfriskrivning
+    y -= 100
+    c.setFillColor(colors.HexColor("#64748b"))
+    c.setFont("Helvetica-Oblique", 8)
+    c.drawString(40, y, "* Kalkylen baseras på schabloniserade beräkningar för solproduktion, effekttariffer och årlig degradering.")
+    c.drawString(40, y - 12, "  Faktiskt utfall kan variera beroende på lokala väderförhållanden, elnätsavtal samt framtida elprisutveckling.")
+
+    # Footer
+    c.setFont("Helvetica", 9)
+    c.drawString(40, 30, "EnergyIQ Platform • Ingenjörsmässig Energimodellering • www.energyiq.se")
+
+    c.showPage()
+    c.save()
+    
+    buffer.seek(0)
+    return buffer
 
 # Huvud-banner
 st.markdown("""
@@ -450,46 +546,22 @@ with tab3:
     df_cf = pd.DataFrame({"Ackumulerat Kassaflöde (kr)": ack_kassaflode}, index=ar_lista)
     st.line_chart(df_cf, height=350, use_container_width=True)
 
-    # PDF/Rapport-generering
+    # PDF-generering
     st.markdown("---")
-    st.subheader("📄 Generera Investeringsrapport")
+    st.subheader("📄 Generera Professionell PDF-Investeringsrapport")
     
-    rapport_text = f"""
-==================================================
-ENERGYIQ - INVESTERINGSRAPPORT & TEKNISK KALKYL
-Datum: {datetime.now().strftime('%Y-%m-%d')}
-==================================================
+    pdf_buffer = skape_pdf_rapport(
+        effekt_kw, batteri_kwh, sol_degradering, bat_degradering,
+        kostnad_sol, kostnad_batteri, total_investering, elpris_snitt,
+        elpris_inflation, effekt_kapat_kw, effekt_taxa_kr_kw,
+        payback_str, arliga_besparingar[1], ack_kassaflode[-1]
+    )
 
-1. ANLÄGGNINGSSPECIFIKATION:
---------------------------------------------------
-- Solcellseffekt: {effekt_kw} kWp
-- Batterikapacitet: {batteri_kwh} kWh
-- Årlig solcellsdegradering: {sol_degradering}%
-- Årlig batteridegradering: {bat_degradering}%
-
-2. EKONOMISKA PARAMETRAR:
---------------------------------------------------
-- Investering Solceller (efter avdrag): {kostnad_sol:,.0f} kr
-- Investering Batteri (efter avdrag): {kostnad_batteri:,.0f} kr
-- Total Nettoinvestering: {total_investering:,.0f} kr
-- Förväntat medel-elpris: {elpris_snitt} kr/kWh (Inflation: {elpris_inflation}%/år)
-- Kapad effekttopp: {effekt_kapat_kw} kW (Effekttaxa: {effekt_taxa_kr_kw} kr/kW/mån)
-
-3. SIMULERINGSRESULTAT (25 ÅR):
---------------------------------------------------
-- Beräknad återbetalningstid: {payback_str}
-- Årlig besparing År 1: {arliga_besparingar[1]:,.0f} kr
-- Total nettonytta efter 25 år: {ack_kassaflode[-1]:,.0f} kr
-
-==================================================
-EnergyIQ Platform • Ingenjörsmässig Energimodell
-==================================================
-"""
     st.download_button(
-        label="📥 Ladda ner Sammanfattande Investeringsrapport (.txt)",
-        data=rapport_text,
-        file_name=f"EnergyIQ_Rapport_{datetime.now().strftime('%Y%m%d')}.txt",
-        mime="text/plain"
+        label="📥 Ladda ner Investeringsrapport som PDF",
+        data=pdf_buffer,
+        file_name=f"EnergyIQ_Rapport_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mime="application/pdf"
     )
 
 # ==========================================
@@ -565,4 +637,4 @@ with tab4:
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.0 • Utvecklad med Python & Streamlit • Avancerad livscykelkalkyl med effekttariffer & degradering.</div>', unsafe_allow_html=True)
+st
