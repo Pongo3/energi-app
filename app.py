@@ -494,11 +494,11 @@ with tab3:
             batteri_kwh, kostnad_batteri, bat_degradering = 0, 0, 0.0
 
     with col_in3:
-        st.markdown("#### 3. Elpris & Effekttarrif")
+        st.markdown("#### 3. Elpris & Effekttariff")
         elpris_snitt = st.number_input("Förväntat elpris inkl. skatt (kr/kWh):", value=1.8, step=0.1)
         elpris_inflation = st.slider("Årlig elprisökning / inflation (%):", 0.0, 5.0, 2.0, step=0.5)
         
-        har_effekttariff = st.checkbox("Inkludera Effekttariff-besparing", value=True, help="Många elnätbolag tar ut avgift baserat på månadens högsta effekttoppar (kr/kW/mån).")
+        har_effekttariff = st.checkbox("Inkludera effekttariff-besparing", value=True, help="Många elnätbolag tar ut avgift baserat på månadens högsta effekttoppar (kr/kW/mån).")
         if har_effekttariff and har_batteri:
             effekt_kapat_kw = st.number_input("Uppskattad kapad effekttopp (kW):", min_value=0.5, max_value=20.0, value=4.0, step=0.5)
             effekt_taxa_kr_kw = st.number_input("Elnätets effekttaxa (kr/kW/månad):", value=80.0, step=5.0)
@@ -654,7 +654,7 @@ with tab4:
 
     st.bar_chart(df_co2_comp, height=350, use_container_width=True)
 
-# B2B SÄLJ & KONTAKTSECTION
+# B2B SÄLJ & KONTAKTSEKTION
 st.markdown("""
     <div class="b2b-card">
         <h3>💼 Vill du ha en liknande kalkylator till ditt företag?</h3>
@@ -666,4 +666,4 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Footer
-st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.2 • Utvecklad med Python & Streamlit • Licensierad energimodell med inbyggd B2B-kontakt.</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer-text">EnergyIQ Version 3.3 • Utvecklad med Python & Streamlit • Licensierad energimodell med inbyggd B2B-kontakt.</div>', unsafe_allow_html=True)
